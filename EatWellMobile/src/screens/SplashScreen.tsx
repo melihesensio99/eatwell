@@ -10,8 +10,11 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const subtitleFade = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0.3)).current;
+  const ringScale = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
+    // Logo animasyonu
     Animated.sequence([
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -21,18 +24,41 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
-          tension: 20,
-          friction: 7,
+          tension: 15,
+          friction: 6,
+          useNativeDriver: true,
+        }),
+        Animated.spring(ringScale, {
+          toValue: 1,
+          tension: 10,
+          friction: 5,
           useNativeDriver: true,
         }),
       ]),
       Animated.timing(subtitleFade, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
 
+    // Glow pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 0.8,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0.3,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
 
     const timer = setTimeout(async () => {
       try {
@@ -52,18 +78,42 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Arka plan efektleri */}
+      <Animated.View style={[styles.bgGlow, styles.bgGlow1, { opacity: glowAnim }]} />
+      <Animated.View style={[styles.bgGlow, styles.bgGlow2, { opacity: glowAnim }]} />
+
+      {/* Logo ve halo */}
       <Animated.View
         style={[
-          styles.logoContainer,
+          styles.logoRing,
           {
             opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
+            transform: [{ scale: ringScale }],
           },
         ]}
       >
-        <Text style={styles.logoEmoji}>🥗</Text>
-        <Text style={styles.logoText}>EatWell</Text>
-        <Text style={styles.logoSubtext}>FeelWell</Text>
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <Text style={styles.logoEmoji}>🥗</Text>
+        </Animated.View>
+      </Animated.View>
+
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+        <View style={styles.titleRow}>
+          <Text style={styles.logoText}>Eat</Text>
+          <Text style={styles.logoTextGreen}>Well</Text>
+        </View>
+        <View style={styles.titleRow}>
+          <Text style={styles.logoSubtext}>Feel</Text>
+          <Text style={styles.logoSubtextGreen}>Well</Text>
+        </View>
       </Animated.View>
 
       <Animated.View style={{ opacity: subtitleFade }}>
@@ -82,40 +132,90 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F1923',
+    backgroundColor: '#0A0E17',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoContainer: {
+  bgGlow: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  bgGlow1: {
+    width: 350,
+    height: 350,
+    backgroundColor: 'rgba(0, 214, 143, 0.06)',
+    top: '15%',
+    left: -100,
+  },
+  bgGlow2: {
+    width: 300,
+    height: 300,
+    backgroundColor: 'rgba(56, 189, 248, 0.04)',
+    bottom: '15%',
+    right: -80,
+  },
+  logoRing: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: 'rgba(0, 214, 143, 0.06)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 214, 143, 0.12)',
+    marginBottom: 24,
+  },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 214, 143, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoEmoji: {
-    fontSize: 80,
-    marginBottom: 16,
+    fontSize: 52,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
   },
   logoText: {
-    fontSize: 42,
+    fontSize: 44,
     fontWeight: '900',
-    color: '#2D7A4F',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(45, 122, 79, 0.4)',
+    color: '#F0F4F8',
+    letterSpacing: -1,
+  },
+  logoTextGreen: {
+    fontSize: 44,
+    fontWeight: '900',
+    color: '#00D68F',
+    letterSpacing: -1,
+    textShadowColor: 'rgba(0, 214, 143, 0.4)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadowRadius: 12,
   },
   logoSubtext: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '300',
-    color: '#4CAF50',
-    letterSpacing: 4,
+    color: '#64748B',
+    letterSpacing: 6,
+    marginTop: -4,
+  },
+  logoSubtextGreen: {
+    fontSize: 26,
+    fontWeight: '300',
+    color: '#00FFB2',
+    letterSpacing: 6,
     marginTop: -4,
   },
   tagline: {
-    color: 'rgba(168, 184, 200, 0.8)',
-    fontSize: 16,
+    color: 'rgba(148, 163, 184, 0.8)',
+    fontSize: 15,
     fontWeight: '500',
-    letterSpacing: 0.5,
-    marginTop: 8,
+    letterSpacing: 0.8,
+    marginTop: 12,
   },
   bottomDots: {
     position: 'absolute',
@@ -127,11 +227,15 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   dotActive: {
-    backgroundColor: '#2D7A4F',
-    width: 20,
+    backgroundColor: '#00D68F',
+    width: 24,
+    shadowColor: '#00D68F',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
   },
 });
 

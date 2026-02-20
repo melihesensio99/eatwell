@@ -3,11 +3,6 @@ using Application.Abstracts.Services.ExternalServices;
 using Application.Repositories;
 using AutoMapper;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
@@ -26,17 +21,31 @@ namespace Infrastructure.Services
 
         public async Task<Product> GetAndifExistSaveProductAsync(string barcode)
         {
-           var data = await _repository.GetProductByBarcodeAsync(barcode);
-            if(data != null)
-                return data;
+            if (string.IsNullOrWhiteSpace(barcode))
+                throw new ArgumentException("Barkod değeri boş olamaz");
+
+            barcode = barcode.Trim();
+
+          
+            var existing = await _repository.GetProductByBarcodeAsync(barcode);
+            if (existing != null)
+                return existing;
+
             var apiResponse = await _foodApiClient.GetProductByBarcode(barcode);
-              
-           var result = _mapper.Map<Product>(apiResponse);
+            var product = _mapper.Map<Product>(apiResponse);
 
-            await _repository.AddAsync(result);
+            if (string.IsNullOrEmpty(product.Code))
+                product.Code = barcode;
+
+            var doubleCheck = await _repository.GetProductByBarcodeAsync(barcode);
+            if (doubleCheck != null)
+                return doubleCheck;
+
+            await _repository.AddAsync(product);
             await _repository.SaveChangesAsync();
-            return result;
 
+            return product;
         }
     }
 }
+

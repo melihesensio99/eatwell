@@ -13,6 +13,8 @@ namespace Persistence.Contexts
 
         public DbSet<Product> Products { get; set; }
         public DbSet<DailyLog> DailyLogs { get; set; }
+        public DbSet<UserAllergen> UserAllergens { get; set; }
+        public DbSet<CalorieGoal> CalorieGoals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

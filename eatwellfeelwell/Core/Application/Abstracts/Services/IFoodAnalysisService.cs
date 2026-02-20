@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Application.Abstracts.Services
 {
-    public interface IIFoodAnalysisService
+    public interface IFoodAnalysisService
     {
-        Task<ProductAnalysisDto> AnalyzeProduct(string barcode);
+        Task<ProductAnalysisDto> AnalyzeProduct(string barcode, string? deviceId = null);
     }
 }

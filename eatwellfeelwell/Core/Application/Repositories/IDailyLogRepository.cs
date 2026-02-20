@@ -10,7 +10,9 @@ namespace Application.Repositories
     public interface IDailyLogRepository
     {
         Task<List<DailyLog>> GetDailyLogsByDateAsync(string deviceId, DateTime date);
+        Task<DailyLog?> GetByIdAsync(int id);
         Task AddAsync(DailyLog dailyLog);
+        void Delete(DailyLog dailyLog);
         Task SaveChangesAsync();
     }
 }

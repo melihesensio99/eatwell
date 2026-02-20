@@ -11,7 +11,8 @@ namespace Application.Abstracts.Services
     public interface IDailyLogService
     {
         Task AddConsumptionAsync(AddConsumptionDto consumptionDto);
-
-      Task<DailySummaryDto> GetDailySummaryAsync(string deviceId ,DateTime date);
+        Task<bool> DeleteConsumptionAsync(int logId, string deviceId);
+        Task<bool> UpdateConsumptionAmountAsync(int logId, string deviceId, float newAmount);
+        Task<DailySummaryDto> GetDailySummaryAsync(string deviceId, DateTime date);
     }
 }

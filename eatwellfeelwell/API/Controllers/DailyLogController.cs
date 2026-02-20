@@ -1,8 +1,7 @@
 using Application.Abstracts.Services;
 using Application.DTOs;
+using Application.DTOs.Track;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 
 namespace API.Controllers
 {
@@ -30,5 +29,26 @@ namespace API.Controllers
             var summary = await _dailyLogService.GetDailySummaryAsync(deviceId, date ?? DateTime.UtcNow);
             return Ok(summary);
         }
+
+        [HttpDelete("{logId}")]
+        public async Task<IActionResult> DeleteConsumption(int logId, [FromQuery] string deviceId)
+        {
+            var result = await _dailyLogService.DeleteConsumptionAsync(logId, deviceId);
+            if (!result)
+                return NotFound(new { message = "Kayıt bulunamadı veya size ait değil" });
+
+            return Ok(new { message = "Kayıt başarıyla silindi" });
+        }
+
+        [HttpPut("{logId}")]
+        public async Task<IActionResult> UpdateConsumption(int logId, [FromQuery] string deviceId, [FromBody] UpdateAmountDto request)
+        {
+            var result = await _dailyLogService.UpdateConsumptionAmountAsync(logId, deviceId, request.Amount);
+            if (!result)
+                return NotFound(new { message = "Kayıt bulunamadı veya size ait değil" });
+
+            return Ok(new { message = "Miktar başarıyla güncellendi" });
+        }
     }
 }
+

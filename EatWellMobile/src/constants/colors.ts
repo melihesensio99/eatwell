@@ -1,111 +1,118 @@
-// ==========================================
-// EatWellFeelWell - Renk Paleti
-// Premium, modern tasarım için renk sistemi
-// ==========================================
-
 export const DarkColors = {
-  // Ana Renkler
-  primary: '#2D7A4F',
-  primaryLight: '#4CAF50',
-  primaryDark: '#1B5E20',
+  // Ana Renkler — FatSecret yeşili
+  primary: '#31B24A',
+  primaryLight: '#4ACD63',
+  primaryDark: '#259924',
   
-  // Arka Plan Renkleri
-  background: '#0F1923',
-  backgroundLight: '#1A2A3A',
-  backgroundCard: '#1E3045',
-  backgroundGlass: 'rgba(30, 48, 69, 0.85)',
+  // Arka Plan — Koyu ama sıcak tonlar
+  background: '#1A1A2E',
+  backgroundLight: '#222240',
+  backgroundCard: '#2A2A45',
+  backgroundGlass: 'rgba(42, 42, 69, 0.85)',
   
   // Metin Renkleri
-  textPrimary: '#FFFFFF',
-  textSecondary: '#A8B8C8',
-  textMuted: '#6B7D8E',
+  textPrimary: '#F5F5F5',
+  textSecondary: '#B0B0C3',
+  textMuted: '#7A7A95',
   
-  // Vurgu Renkleri
-  accent: '#00E676',
-  accentOrange: '#FF9800',
-  accentRed: '#FF5252',
-  accentBlue: '#42A5F5',
-  accentPurple: '#AB47BC',
+  // Vurgu Renkleri — FatSecret tarzı canlı
+  accent: '#4ACD63',
+  accentOrange: '#FF9500',
+  accentRed: '#FF3B30',
+  accentBlue: '#007AFF',
+  accentPurple: '#AF52DE',
+  accentYellow: '#FFCC00',
+  accentPink: '#FF2D55',
+  accentCyan: '#5AC8FA',
   
   // Nutri-Score Renkleri
-  nutriScoreA: '#038141',
+  nutriScoreA: '#31B24A',
   nutriScoreB: '#85BB2F',
-  nutriScoreC: '#FECB02',
-  nutriScoreD: '#EE8100',
-  nutriScoreE: '#E63E11',
+  nutriScoreC: '#FFCC00',
+  nutriScoreD: '#FF9500',
+  nutriScoreE: '#FF3B30',
   
   // NOVA Grup Renkleri
-  novaGroup1: '#4CAF50',
-  novaGroup2: '#FFC107',
-  novaGroup3: '#FF9800',
-  novaGroup4: '#F44336',
+  novaGroup1: '#31B24A',
+  novaGroup2: '#FFCC00',
+  novaGroup3: '#FF9500',
+  novaGroup4: '#FF3B30',
   
-  // Seviye Renkleri (Düşük/Orta/Yüksek)
-  levelLow: '#4CAF50',
-  levelModerate: '#FFC107',
-  levelHigh: '#F44336',
+  // Seviye Renkleri
+  levelLow: '#31B24A',
+  levelModerate: '#FF9500',
+  levelHigh: '#FF3B30',
   
   // Sağlık Durumu
-  healthy: '#00E676',
-  unhealthy: '#FF5252',
+  healthy: '#4ACD63',
+  unhealthy: '#FF3B30',
   
   // Arayüz
   border: 'rgba(255,255,255,0.08)',
   divider: 'rgba(255,255,255,0.05)',
-  shadow: 'rgba(0,0,0,0.3)',
-  overlay: 'rgba(0,0,0,0.5)',
+  shadow: 'rgba(0,0,0,0.5)',
+  overlay: 'rgba(0,0,0,0.6)',
   
-  // Gradient
-  gradientStart: '#0F2027',
-  gradientMiddle: '#203A43',
-  gradientEnd: '#2C5364',
+  // Gradient Tonları
+  gradientStart: '#1A1A2E',
+  gradientMiddle: '#222240',
+  gradientEnd: '#2A2A45',
+
+  // Glow Efektleri
+  glowPrimary: 'rgba(49, 178, 74, 0.3)',
+  glowBlue: 'rgba(0, 122, 255, 0.25)',
+  glowPurple: 'rgba(175, 82, 222, 0.25)',
+  glowOrange: 'rgba(255, 149, 0, 0.25)',
 };
 
 export const LightColors = {
-  // Ana Renkler
-  primary: '#2D7A4F',
-  primaryLight: '#4CAF50',
-  primaryDark: '#1B5E20',
+  // Ana Renkler — FatSecret yeşili
+  primary: '#259924',
+  primaryLight: '#31B24A',
+  primaryDark: '#1E7E1E',
   
-  // Arka Plan Renkleri
-  background: '#F5F7FA',
+  // Arka Plan Renkleri — Temiz beyaz
+  background: '#F2F2F7',
   backgroundLight: '#FFFFFF',
   backgroundCard: '#FFFFFF',
-  backgroundGlass: 'rgba(255, 255, 255, 0.9)',
+  backgroundGlass: 'rgba(255, 255, 255, 0.95)',
   
-  // Metin Renkleri
-  textPrimary: '#1A1A2E',
-  textSecondary: '#4A5568',
-  textMuted: '#A0AEC0',
+  // Metin Renkleri — Koyu ve net
+  textPrimary: '#1C1C1E',
+  textSecondary: '#3C3C43',
+  textMuted: '#8E8E93',
   
   // Vurgu Renkleri
-  accent: '#00C853',
-  accentOrange: '#F57C00',
-  accentRed: '#E53935',
-  accentBlue: '#1E88E5',
-  accentPurple: '#8E24AA',
+  accent: '#259924',
+  accentOrange: '#FF9500',
+  accentRed: '#FF3B30',
+  accentBlue: '#007AFF',
+  accentPurple: '#AF52DE',
+  accentYellow: '#FFCC00',
+  accentPink: '#FF2D55',
+  accentCyan: '#5AC8FA',
   
   // Nutri-Score Renkleri
-  nutriScoreA: '#038141',
-  nutriScoreB: '#85BB2F',
-  nutriScoreC: '#FECB02',
-  nutriScoreD: '#EE8100',
-  nutriScoreE: '#E63E11',
+  nutriScoreA: '#259924',
+  nutriScoreB: '#7AB532',
+  nutriScoreC: '#E6B800',
+  nutriScoreD: '#E68A00',
+  nutriScoreE: '#E63329',
   
   // NOVA Grup Renkleri
-  novaGroup1: '#4CAF50',
-  novaGroup2: '#FFC107',
-  novaGroup3: '#FF9800',
-  novaGroup4: '#F44336',
+  novaGroup1: '#259924',
+  novaGroup2: '#E6B800',
+  novaGroup3: '#E68A00',
+  novaGroup4: '#E63329',
   
   // Seviye Renkleri
-  levelLow: '#4CAF50',
-  levelModerate: '#FFC107',
-  levelHigh: '#F44336',
+  levelLow: '#259924',
+  levelModerate: '#E68A00',
+  levelHigh: '#E63329',
   
   // Sağlık Durumu
-  healthy: '#00C853',
-  unhealthy: '#E53935',
+  healthy: '#259924',
+  unhealthy: '#E63329',
   
   // Arayüz
   border: 'rgba(0,0,0,0.08)',
@@ -114,9 +121,15 @@ export const LightColors = {
   overlay: 'rgba(0,0,0,0.3)',
   
   // Gradient
-  gradientStart: '#E8F5E9',
-  gradientMiddle: '#C8E6C9',
-  gradientEnd: '#A5D6A7',
+  gradientStart: '#F2F2F7',
+  gradientMiddle: '#E5E5EA',
+  gradientEnd: '#D1D1D6',
+
+  // Glow Efektleri
+  glowPrimary: 'rgba(37, 153, 36, 0.15)',
+  glowBlue: 'rgba(0, 122, 255, 0.12)',
+  glowPurple: 'rgba(175, 82, 222, 0.12)',
+  glowOrange: 'rgba(255, 149, 0, 0.12)',
 };
 
 // Geriye uyumluluk için varsayılan dark tema
@@ -138,6 +151,7 @@ export const BorderRadius = {
   md: 12,
   lg: 16,
   xl: 24,
+  xxl: 32,
   round: 999,
 };
 
@@ -149,5 +163,6 @@ export const FontSize = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
-  hero: 40,
+  hero: 44,
 };
+

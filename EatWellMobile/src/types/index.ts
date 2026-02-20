@@ -21,6 +21,12 @@ export interface ProductAnalysis {
   sugars: string;
   score: number;
   isHealthy: boolean;
+  allergenWarning?: AllergenWarning;
+}
+
+export interface AllergenWarning {
+  hasAllergenWarning: boolean;
+  detectedAllergens: string[];
 }
 
 export interface FoodCalorieInfo {

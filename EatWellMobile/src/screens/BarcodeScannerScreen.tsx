@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/colors';
+import { useTheme } from '../constants/ThemeContext';
 
 interface Props {
   navigation: any;
@@ -15,6 +15,7 @@ interface Props {
 }
 
 const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -35,8 +36,8 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
   // Henüz izin bilgisi yüklenmediyse
   if (!permission) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.messageText}>Kamera izni yükleniyor...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.messageText, { color: colors.textSecondary }]}>Kamera izni yükleniyor...</Text>
       </View>
     );
   }
@@ -44,10 +45,12 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
   // İzin verilmediyse
   if (!permission.granted) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.emoji}>📸</Text>
-        <Text style={styles.title}>Kamera İzni Gerekli</Text>
-        <Text style={styles.messageText}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.permIconWrap}>
+          <Text style={styles.emoji}>📸</Text>
+        </View>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Kamera İzni Gerekli</Text>
+        <Text style={[styles.messageText, { color: colors.textSecondary }]}>
           Barkod taramak için kamera erişimine izin vermeniz gerekiyor.
         </Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
@@ -57,7 +60,7 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.backLink}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backLinkText}>← Geri Dön</Text>
+          <Text style={[styles.backLinkText, { color: colors.textMuted }]}>← Geri Dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -75,19 +78,18 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Overlay */}
       <View style={styles.overlay}>
-        {/* Üst karanlık alan */}
+        {/* Üst alan */}
         <View style={styles.overlayTop}>
-          <Text style={styles.scanTitle}>📷 Barkodu Tarayın</Text>
+          <Text style={styles.scanTitle}>Barkodu Tarayın</Text>
           <Text style={styles.scanSubtitle}>
-            Ürünün barkodunu kamera alanına hizalayın
+            Ürünün barkodunu çerçeveye hizalayın
           </Text>
         </View>
 
-        {/* Ortadaki tarama çerçevesi */}
+        {/* Tarama çerçevesi */}
         <View style={styles.scanAreaRow}>
           <View style={styles.overlaySide} />
           <View style={styles.scanFrame}>
-            {/* Köşe çizgileri */}
             <View style={[styles.corner, styles.cornerTopLeft]} />
             <View style={[styles.corner, styles.cornerTopRight]} />
             <View style={[styles.corner, styles.cornerBottomLeft]} />
@@ -96,7 +98,7 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.overlaySide} />
         </View>
 
-        {/* Alt karanlık alan */}
+        {/* Alt alan */}
         <View style={styles.overlayBottom}>
           {scanned && (
             <TouchableOpacity
@@ -118,7 +120,7 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const SCAN_AREA_SIZE = 260;
+const SCAN_AREA_SIZE = 270;
 
 const styles = StyleSheet.create({
   container: {
@@ -127,18 +129,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  emoji: {
-    fontSize: 64,
+  permIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 214, 143, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 214, 143, 0.15)',
+  },
+  emoji: {
+    fontSize: 48,
   },
   title: {
-    color: Colors.textPrimary,
     fontSize: FontSize.xxl,
-    fontWeight: '800',
+    fontWeight: '900',
     marginBottom: Spacing.md,
+    letterSpacing: -0.3,
   },
   messageText: {
-    color: Colors.textSecondary,
     fontSize: FontSize.md,
     textAlign: 'center',
     lineHeight: 22,
@@ -149,30 +160,33 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     marginBottom: Spacing.md,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   permissionButtonText: {
     color: '#FFFFFF',
     fontSize: FontSize.lg,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   backLink: {
     padding: Spacing.md,
   },
   backLinkText: {
-    color: Colors.textMuted,
     fontSize: FontSize.md,
     fontWeight: '600',
   },
-  // Camera overlay
   overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(10, 14, 23, 0.7)',
     justifyContent: 'flex-end',
     alignItems: 'center',
     paddingBottom: Spacing.lg,
@@ -180,12 +194,14 @@ const styles = StyleSheet.create({
   scanTitle: {
     color: '#FFFFFF',
     fontSize: FontSize.xl,
-    fontWeight: '700',
+    fontWeight: '800',
     marginBottom: Spacing.xs,
+    letterSpacing: -0.3,
   },
   scanSubtitle: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: FontSize.sm,
+    fontWeight: '500',
   },
   scanAreaRow: {
     flexDirection: 'row',
@@ -193,17 +209,16 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(10, 14, 23, 0.7)',
   },
   scanFrame: {
     width: SCAN_AREA_SIZE,
     height: SCAN_AREA_SIZE,
-    borderWidth: 0,
   },
   corner: {
     position: 'absolute',
-    width: 30,
-    height: 30,
+    width: 36,
+    height: 36,
     borderColor: Colors.accent,
   },
   cornerTopLeft: {
@@ -211,32 +226,32 @@ const styles = StyleSheet.create({
     left: 0,
     borderTopWidth: 3,
     borderLeftWidth: 3,
-    borderTopLeftRadius: 8,
+    borderTopLeftRadius: 12,
   },
   cornerTopRight: {
     top: 0,
     right: 0,
     borderTopWidth: 3,
     borderRightWidth: 3,
-    borderTopRightRadius: 8,
+    borderTopRightRadius: 12,
   },
   cornerBottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: 3,
     borderLeftWidth: 3,
-    borderBottomLeftRadius: 8,
+    borderBottomLeftRadius: 12,
   },
   cornerBottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: 3,
     borderRightWidth: 3,
-    borderBottomRightRadius: 8,
+    borderBottomRightRadius: 12,
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(10, 14, 23, 0.7)',
     alignItems: 'center',
     paddingTop: Spacing.xl,
     gap: Spacing.md,
@@ -245,7 +260,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   rescanText: {
     color: '#FFFFFF',
@@ -255,6 +275,8 @@ const styles = StyleSheet.create({
   cancelButton: {
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: BorderRadius.xl,
   },
   cancelText: {
     color: 'rgba(255,255,255,0.8)',

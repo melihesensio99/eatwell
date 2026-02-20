@@ -29,6 +29,8 @@ namespace Persistence
 
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IDailyLogRepository, DailyLogRepository>();
+            services.AddScoped<IUserAllergenRepository, UserAllergenRepository>();
+            services.AddScoped<ICalorieGoalRepository, CalorieGoalRepository>();
 
         }
     }

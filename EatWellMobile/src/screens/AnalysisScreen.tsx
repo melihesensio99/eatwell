@@ -13,6 +13,7 @@ import { Colors, Spacing, BorderRadius, FontSize } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { ProductAnalysis } from '../types';
 import { productService } from '../services';
+import { getDeviceId } from '../services/deviceService';
 import {
   NutriScoreBadge,
   NovaGroupBadge,
@@ -33,6 +34,7 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     fetchAnalysis();
@@ -42,14 +44,23 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await productService.getProductAnalysis(barcode);
+      const deviceId = await getDeviceId();
+      const result = await productService.getProductAnalysis(barcode, deviceId);
       setData(result);
       
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 700,
+          easing: Easing.out(Easing.back(1.1)),
+          useNativeDriver: true,
+        }),
+      ]).start();
     } catch (err: any) {
       setError(
         err.response?.status === 404
@@ -67,9 +78,11 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorEmoji}>😔</Text>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.errorIconWrap}>
+          <Text style={styles.errorEmoji}>😔</Text>
+        </View>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchAnalysis}>
           <Text style={styles.retryText}>🔄 Tekrar Dene</Text>
         </TouchableOpacity>
@@ -77,7 +90,7 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>← Geri Dön</Text>
+          <Text style={[styles.backButtonText, { color: colors.textMuted }]}>← Geri Dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -86,41 +99,74 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
   if (!data) return null;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
-      <Animated.View style={{ opacity: fadeAnim }}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]} 
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         {/* Ürün Bilgisi */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
           {data.imageFrontUrl ? (
-            <Image
-              source={{ uri: data.imageFrontUrl }}
-              style={styles.productImage}
-              resizeMode="contain"
-            />
+            <View style={styles.imageWrap}>
+              <Image
+                source={{ uri: data.imageFrontUrl }}
+                style={styles.productImage}
+                resizeMode="contain"
+              />
+            </View>
           ) : (
-            <View style={styles.productImagePlaceholder}>
+            <View style={[styles.productImagePlaceholder, { backgroundColor: colors.backgroundLight, borderColor: colors.border }]}>
               <Text style={styles.productImagePlaceholderText}>📦</Text>
             </View>
           )}
-          <Text style={styles.barcodeLabel}>Barkod: {barcode}</Text>
-          <Text style={styles.productName}>{data.productName || 'Bilinmeyen Ürün'}</Text>
+          <View style={[styles.barcodeChip, { backgroundColor: colors.backgroundLight }]}>
+            <Text style={[styles.barcodeLabel, { color: colors.textMuted }]}>{barcode}</Text>
+          </View>
+          <Text style={[styles.productName, { color: colors.textPrimary }]}>
+            {data.productName || 'Bilinmeyen Ürün'}
+          </Text>
         </View>
+
+        {/* Alerjen Uyarısı */}
+        {data.allergenWarning && data.allergenWarning.hasAllergenWarning && (
+          <View style={[styles.warningContainer, { backgroundColor: Colors.accentRed + '15', borderColor: Colors.accentRed + '30' }]}>
+            <View style={styles.warningHeader}>
+              <Text style={styles.warningIcon}>⚠️</Text>
+              <Text style={[styles.warningTitle, { color: Colors.accentRed }]}>Alerjen Uyarısı</Text>
+            </View>
+            <Text style={[styles.warningText, { color: colors.textPrimary }]}>
+              Bu ürün, profilinizde işaretlediğiniz alerjenleri içermektedir:
+            </Text>
+            <View style={styles.warningTags}>
+              {data.allergenWarning.detectedAllergens.map((allergen, index) => (
+                <View key={index} style={[styles.warningTag, { backgroundColor: Colors.accentRed }]}>
+                   <Text style={styles.warningTagText}>{allergen}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Sağlık Durumu - Skor */}
         <HealthBadge score={data.score} />
 
         {/* Nutri-Score & NOVA */}
         <View style={styles.badgesRow}>
-          <View style={styles.badgeContainer}>
+          <View style={[styles.badgeContainer, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
             <NutriScoreBadge grade={data.nutritionGrades} />
           </View>
-          <View style={styles.badgeContainer}>
+          <View style={[styles.badgeContainer, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
             <NovaGroupBadge group={data.novaGroup} />
           </View>
         </View>
 
         {/* Besin Seviyeleri */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📊 Besin Seviyeleri</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionIcon}>📊</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Besin Seviyeleri</Text>
+          </View>
           <NutrientBar label="Yağ" level={data.fat} />
           <NutrientBar label="Doymuş Yağ" level={data.saturatedFat} />
           <NutrientBar label="Şeker" level={data.sugars} />
@@ -129,8 +175,11 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
 
         {/* Katkı Maddeleri */}
         {data.additivesTags && data.additivesTags.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>🧪 Katkı Maddeleri</Text>
+          <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionIcon}>🧪</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Katkı Maddeleri</Text>
+            </View>
             <View style={styles.additivesContainer}>
               {data.additivesTags.map((tag, index) => (
                 <View key={index} style={styles.additiveChip}>
@@ -143,7 +192,7 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
             {data.additiveDescriptions && data.additiveDescriptions.length > 0 && (
               <View style={styles.additiveDescriptions}>
                 {data.additiveDescriptions.map((desc, i) => (
-                  <Text key={i} style={styles.additiveDescText}>
+                  <Text key={i} style={[styles.additiveDescText, { color: colors.textSecondary }]}>
                     • {desc}
                   </Text>
                 ))}
@@ -159,13 +208,17 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
             navigation.navigate('Calorie', {
               barcode,
               productName: data.productName,
-              // enableAdding is NOT passed here, so it will be undefined (false)
             })
           }
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
-          <Text style={styles.calorieButtonIcon}>🔥</Text>
-          <Text style={styles.calorieButtonText}>Kalori Detaylarını Gör</Text>
+          <View style={styles.calorieBtnGlow}>
+            <Text style={styles.calorieButtonIcon}>🔥</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.calorieButtonText}>Kalori Detayları</Text>
+            <Text style={styles.calorieButtonSub}>Besin değerlerini incele</Text>
+          </View>
           <Text style={styles.calorieButtonArrow}>→</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -176,177 +229,182 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + 20,
   },
   header: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
     alignItems: 'center',
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.xxl,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+  },
+  imageWrap: {
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    marginBottom: Spacing.md,
   },
   productImage: {
-    width: 220,
-    height: 220,
-    borderRadius: BorderRadius.lg,
+    width: 200,
+    height: 200,
+    borderRadius: BorderRadius.xl,
     backgroundColor: 'transparent',
-    marginBottom: Spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   productImagePlaceholder: {
-    width: 220,
-    height: 220,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.backgroundLight,
+    width: 200,
+    height: 200,
+    borderRadius: BorderRadius.xl,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   productImagePlaceholderText: {
-    fontSize: 80,
+    fontSize: 72,
   },
-  barcodeLabel: {
-    color: Colors.textMuted,
-    fontSize: FontSize.sm,
-    fontWeight: '500',
-    marginBottom: 4,
-    backgroundColor: Colors.backgroundLight,
+  barcodeChip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.round,
-    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+  },
+  barcodeLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 0.5,
   },
   productName: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    lineHeight: 34,
+    fontSize: 24,
+    fontWeight: '900',
+    lineHeight: 32,
     textAlign: 'center',
-    marginTop: Spacing.sm,
-    letterSpacing: 0.3,
-    textShadowColor: 'rgba(45, 122, 79, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    letterSpacing: -0.3,
   },
   badgesRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginVertical: Spacing.md,
+    gap: Spacing.sm,
+    marginVertical: Spacing.sm,
   },
   badgeContainer: {
     flex: 1,
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   card: {
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    marginVertical: Spacing.sm,
+    marginVertical: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  sectionIcon: {
+    fontSize: 20,
   },
   sectionTitle: {
-    color: Colors.textPrimary,
     fontSize: FontSize.lg,
-    fontWeight: '700',
-    marginBottom: Spacing.md,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   additivesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   additiveChip: {
-    backgroundColor: Colors.accentOrange + '20',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    backgroundColor: Colors.accentOrange + '15',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
     borderRadius: BorderRadius.round,
     borderWidth: 1,
-    borderColor: Colors.accentOrange + '40',
+    borderColor: Colors.accentOrange + '25',
   },
   additiveText: {
     color: Colors.accentOrange,
-    fontSize: FontSize.sm,
-    fontWeight: '600',
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   additiveDescriptions: {
     marginTop: Spacing.md,
   },
   additiveDescText: {
-    color: Colors.textSecondary,
     fontSize: FontSize.sm,
     lineHeight: 20,
     marginBottom: 4,
   },
   calorieButton: {
-    backgroundColor: Colors.accentOrange + '15',
-    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.accentOrange + '12',
+    borderRadius: BorderRadius.xxl,
     padding: Spacing.lg,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.accentOrange + '50',
+    borderColor: Colors.accentOrange + '30',
     shadowColor: Colors.accentOrange,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 4,
   },
+  calorieBtnGlow: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.accentOrange + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
   calorieButtonIcon: {
-    fontSize: 28,
+    fontSize: 24,
   },
   calorieButtonText: {
-    flex: 1,
     color: Colors.accentOrange,
     fontSize: FontSize.lg,
-    fontWeight: '700',
-    marginLeft: Spacing.md,
+    fontWeight: '800',
+  },
+  calorieButtonSub: {
+    color: Colors.accentOrange,
+    fontSize: FontSize.xs,
+    fontWeight: '500',
+    opacity: 0.7,
+    marginTop: 2,
   },
   calorieButtonArrow: {
     color: Colors.accentOrange,
     fontSize: FontSize.xl,
     fontWeight: '700',
+    opacity: 0.6,
   },
   errorContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
-  errorEmoji: {
-    fontSize: 64,
+  errorIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 77, 106, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: Spacing.lg,
   },
+  errorEmoji: {
+    fontSize: 48,
+  },
   errorText: {
-    color: Colors.textSecondary,
     fontSize: FontSize.lg,
     textAlign: 'center',
     marginBottom: Spacing.lg,
@@ -356,8 +414,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     marginBottom: Spacing.md,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   retryText: {
     color: '#FFFFFF',
@@ -369,9 +432,48 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   backButtonText: {
-    color: Colors.textMuted,
     fontSize: FontSize.md,
     fontWeight: '600',
+  },
+  warningContainer: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    marginBottom: Spacing.md,
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+    gap: Spacing.sm,
+  },
+  warningIcon: {
+    fontSize: 20,
+  },
+  warningTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  warningText: {
+    fontSize: FontSize.sm,
+    marginBottom: Spacing.md,
+    lineHeight: 20,
+  },
+  warningTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  warningTag: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.round,
+  },
+  warningTagText: {
+    color: '#FFF',
+    fontSize: FontSize.xs,
+    fontWeight: '700',
   },
 });
 

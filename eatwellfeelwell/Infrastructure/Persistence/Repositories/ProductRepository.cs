@@ -26,6 +26,13 @@ namespace Persistence.Repositories
                 .FirstOrDefaultAsync(p => p.Code == barcode);
         }
 
+        public async Task<List<Product>> GetProductsByBarcodesAsync(List<string> barcodes)
+        {
+            return await _context.Products
+                .Where(p => barcodes.Contains(p.Code))
+                .ToListAsync();
+        }
+
         public async Task AddAsync(Product product)
         {
 
@@ -36,6 +43,11 @@ namespace Persistence.Repositories
         {
 
             await _context.SaveChangesAsync();
+        }
+
+        public void Detach(Product product)
+        {
+            _context.Entry(product).State = EntityState.Detached;
         }
 
        

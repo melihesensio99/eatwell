@@ -24,5 +24,7 @@ namespace Application.DTOs
         public string Sugars { get; set; }
         public int Score { get; set; }
         public bool IsHealthy { get; set; }
+        public string[]? AllergensHierarchy { get; set; }
+        public AllergenWarningDto? AllergenWarning { get; set; }
     }
 }

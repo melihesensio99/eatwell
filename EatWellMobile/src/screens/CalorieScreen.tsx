@@ -1,5 +1,5 @@
 // ==========================================
-// CalorieScreen — Kalori Bilgileri Ekranı
+// CalorieScreen — Premium Kalori Bilgileri
 // ==========================================
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -12,6 +12,7 @@ import {
   Animated,
   TextInput,
   Alert,
+  Easing,
 } from 'react-native';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
@@ -44,6 +45,7 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
   const [adding, setAdding] = useState(false);
   const [selectedDate, setSelectedDate] = useState(initialDate ? new Date(initialDate) : new Date());
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     fetchCalorie();
@@ -55,11 +57,19 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
       setError(null);
       const result = await productService.getCalorieInfo(barcode);
       setData(result);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start();
     } catch (err: any) {
       setError('Kalori bilgileri alınamadı.');
     } finally {
@@ -77,7 +87,7 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
       setAdding(true);
       const deviceId = await getDeviceId();
       await dailyLogService.addConsumption(deviceId, barcode, Number(amount), selectedDate);
-      Alert.alert('Başarılı', 'Ürün günlüğe eklendi!', [
+      Alert.alert('Başarılı ✅', 'Ürün günlüğe eklendi!', [
         {
           text: 'Tamam',
           onPress: () => navigation.navigate('DailySummary'),
@@ -96,9 +106,11 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorEmoji}>😔</Text>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.errorIconWrap}>
+          <Text style={styles.errorEmoji}>😔</Text>
+        </View>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchCalorie}>
           <Text style={styles.retryText}>🔄 Tekrar Dene</Text>
         </TouchableOpacity>
@@ -118,35 +130,44 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Animated.View style={{ opacity: fadeAnim }}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]} 
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         {/* Başlık */}
-        {/* Başlık */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>🔥 Kalori Detayları</Text>
-          <Text style={styles.productName}>
-            {data.productName || paramProductName || 'Bilinmeyen Ürün'}
-          </Text>
+        <View style={[styles.header, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+          <Text style={styles.headerIcon}>🔥</Text>
+          <View>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Kalori Detayları</Text>
+            <Text style={[styles.productName, { color: colors.textSecondary }]}>
+              {data.productName || paramProductName || 'Bilinmeyen Ürün'}
+            </Text>
+          </View>
         </View>
 
-        {/* Miktar Girişi ve Ekleme Butonu (SADECE EKLEME MODUNDA VE EN ÜSTTE) */}
+        {/* Miktar Girişi ve Ekleme Butonu */}
         {enableAdding && (
-          <View style={[styles.card, styles.addCard]}>
-            <Text style={styles.sectionTitle}>🍽️ Tüketim Ekle</Text>
+          <View style={[styles.card, styles.addCard, { borderColor: colors.primary }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionIcon}>🍽️</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tüketim Ekle</Text>
+            </View>
             
-            {/* Tarih Seçimi (Sadece bugün değilse göster) */}
+            {/* Tarih Seçimi */}
             {selectedDate.toDateString() !== new Date().toDateString() && (
-              <View style={styles.dateSelector}>
+              <View style={[styles.dateSelector, { backgroundColor: colors.background, borderColor: colors.border }]}>
                 {!initialDate && (
                   <TouchableOpacity onPress={() => {
                     const prevDate = new Date(selectedDate);
                     prevDate.setDate(prevDate.getDate() - 1);
                     setSelectedDate(prevDate);
                   }}>
-                    <Text style={styles.dateNavBtn}>◀</Text>
+                    <Text style={[styles.dateNavBtn, { color: colors.primary }]}>◀</Text>
                   </TouchableOpacity>
                 )}
-                <Text style={styles.dateText}>
+                <Text style={[styles.dateText, { color: colors.textPrimary }]}>
                   {selectedDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
                   {selectedDate.toDateString() === new Date().toDateString() ? ' (Bugün)' : ''}
                 </Text>
@@ -158,23 +179,25 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
                       setSelectedDate(nextDate);
                     }
                   }} disabled={selectedDate.toDateString() === new Date().toDateString()}>
-                    <Text style={[styles.dateNavBtn, selectedDate.toDateString() === new Date().toDateString() && styles.disabledBtn]}>▶</Text>
+                    <Text style={[styles.dateNavBtn, selectedDate.toDateString() === new Date().toDateString() && styles.disabledBtn, { color: colors.primary }]}>▶</Text>
                   </TouchableOpacity>
                 )}
               </View>
             )}
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.background }]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.textPrimary }]}
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
                 placeholder="Miktar"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 autoFocus={true}
               />
-              <Text style={styles.unitText}>gram</Text>
+              <View style={styles.unitBadge}>
+                <Text style={styles.unitText}>gram</Text>
+              </View>
             </View>
             <TouchableOpacity
               style={[styles.addButton, adding && styles.addButtonDisabled]}
@@ -182,7 +205,7 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
               disabled={adding}
             >
               <Text style={styles.addButtonText}>
-                {adding ? 'Ekleniyor...' : 'Günlüğe Ekle'}
+                {adding ? '⏳ Ekleniyor...' : '✅ Günlüğe Ekle'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -190,28 +213,36 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
 
         {/* Donut Chart */}
         {data.caloriePercentInfo && (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Makro Besin Dağılımı</Text>
+          <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionIcon}>🎯</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Makro Dağılımı</Text>
+            </View>
             <CalorieChart data={data.caloriePercentInfo} />
           </View>
         )}
 
         {/* Besin Değerleri Tablosu */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📋 Besin Değerleri (100g)</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionIcon}>📋</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Besin Değerleri (100g)</Text>
+          </View>
           {nutrients.map((nutrient, index) => (
             <View
               key={index}
               style={[
                 styles.nutrientRow,
-                index < nutrients.length - 1 && styles.nutrientRowBorder,
+                index < nutrients.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.divider },
               ]}
             >
               <View style={styles.nutrientLeft}>
-                <Text style={styles.nutrientIcon}>{nutrient.icon}</Text>
-                <Text style={styles.nutrientLabel}>{nutrient.label}</Text>
+                <View style={[styles.nutrientIconWrap, { backgroundColor: nutrient.color + '12' }]}>
+                  <Text style={styles.nutrientIcon}>{nutrient.icon}</Text>
+                </View>
+                <Text style={[styles.nutrientLabel, { color: colors.textPrimary }]}>{nutrient.label}</Text>
               </View>
-              <View style={[styles.nutrientValueBadge, { backgroundColor: nutrient.color + '15' }]}>
+              <View style={[styles.nutrientValueBadge, { backgroundColor: nutrient.color + '12' }]}>
                 <Text style={[styles.nutrientValue, { color: nutrient.color }]}>
                   {nutrient.value !== null ? `${nutrient.value.toFixed(1)} ${nutrient.unit}` : '—'}
                 </Text>
@@ -220,16 +251,13 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
           ))}
         </View>
 
-
-
-
         {/* Geri Butonu */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.8}
         >
-          <Text style={styles.backButtonText}>← Analiz Ekranına Dön</Text>
+          <Text style={[styles.backButtonText, { color: colors.textMuted }]}>← Geri Dön</Text>
         </TouchableOpacity>
       </Animated.View>
     </ScrollView>
@@ -239,43 +267,59 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + 20,
   },
   header: {
-    marginBottom: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.xxl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    gap: Spacing.md,
+  },
+  headerIcon: {
+    fontSize: 36,
   },
   headerTitle: {
-    color: Colors.textPrimary,
     fontSize: FontSize.xxl,
-    fontWeight: '800',
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
   productName: {
-    color: Colors.textSecondary,
-    fontSize: FontSize.md,
-    marginTop: 4,
+    fontSize: FontSize.sm,
+    marginTop: 2,
+    fontWeight: '500',
   },
   card: {
     backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    marginVertical: Spacing.sm,
+    marginVertical: Spacing.xs,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   addCard: {
-    backgroundColor: Colors.primary + '10', // Hafif vurgulu arka plan
-    borderColor: Colors.primary,
-    marginBottom: Spacing.lg,
+    backgroundColor: Colors.primary + '08',
+    borderWidth: 1.5,
+    marginBottom: Spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  sectionIcon: {
+    fontSize: 20,
   },
   sectionTitle: {
-    color: Colors.textPrimary,
     fontSize: FontSize.lg,
-    fontWeight: '700',
-    marginBottom: Spacing.md,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   nutrientRow: {
     flexDirection: 'row',
@@ -283,20 +327,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
   },
-  nutrientRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
   nutrientLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
+  },
+  nutrientIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   nutrientIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   nutrientLabel: {
-    color: Colors.textPrimary,
     fontSize: FontSize.md,
     fontWeight: '600',
   },
@@ -315,32 +361,43 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   backButtonText: {
-    color: Colors.textMuted,
     fontSize: FontSize.md,
     fontWeight: '600',
   },
   errorContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
-  errorEmoji: {
-    fontSize: 64,
+  errorIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 77, 106, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: Spacing.lg,
   },
+  errorEmoji: {
+    fontSize: 48,
+  },
   errorText: {
-    color: Colors.textSecondary,
     fontSize: FontSize.lg,
     textAlign: 'center',
     marginBottom: Spacing.lg,
+    lineHeight: 24,
   },
   retryButton: {
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   retryText: {
     color: '#FFFFFF',
@@ -352,60 +409,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.background,
   },
   input: {
     flex: 1,
     paddingVertical: Spacing.md,
-    fontSize: FontSize.lg,
-    color: Colors.textPrimary,
+    fontSize: FontSize.xl,
+    fontWeight: '700',
+  },
+  unitBadge: {
+    backgroundColor: Colors.primary + '15',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.round,
   },
   unitText: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    fontWeight: '600',
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: '700',
   },
   addButton: {
     backgroundColor: Colors.primary,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   addButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   addButtonText: {
     color: '#FFFFFF',
     fontSize: FontSize.lg,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   dateSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.md,
-    backgroundColor: Colors.background,
     padding: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   dateNavBtn: {
-    fontSize: 24,
-    color: Colors.primary,
+    fontSize: 22,
     paddingHorizontal: Spacing.md,
   },
   dateText: {
     fontSize: FontSize.md,
-    color: Colors.textPrimary,
     fontWeight: '600',
   },
   disabledBtn: {
-    color: Colors.textMuted,
-    opacity: 0.5,
+    opacity: 0.3,
   },
 });
 

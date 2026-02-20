@@ -5,10 +5,12 @@ import { ProductAnalysis, FoodCalorieInfo } from '../types';
 
 class ProductService {
  
-  async getProductAnalysis(barcode: string): Promise<ProductAnalysis> {
-    return httpService.get<ProductAnalysis>(
-      `${API_CONFIG.ENDPOINTS.ANALYSIS}/${barcode}`
-    );
+  async getProductAnalysis(barcode: string, deviceId?: string): Promise<ProductAnalysis> {
+    const url = deviceId 
+      ? `${API_CONFIG.ENDPOINTS.ANALYSIS}/${barcode}?deviceId=${deviceId}`
+      : `${API_CONFIG.ENDPOINTS.ANALYSIS}/${barcode}`;
+      
+    return httpService.get<ProductAnalysis>(url);
   }
 
   async getCalorieInfo(barcode: string): Promise<FoodCalorieInfo> {

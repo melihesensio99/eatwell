@@ -16,6 +16,12 @@ namespace Application.DTOs.Track
 
         public List<ConsumedItemDto> ConsumedItems { get; set; }
 
+        // Kalori hedefi bilgileri
+        public float? CalorieGoal { get; set; }
+        public float? CalorieRemaining { get; set; }
+        public float? CalorieGoalPercentage { get; set; }
+
+
     }
 
 }

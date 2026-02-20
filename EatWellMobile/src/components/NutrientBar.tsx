@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, DimensionValue } from 'react-native';
-import { Colors, BorderRadius, FontSize } from '../constants/colors';
+import { Colors, BorderRadius, FontSize, Spacing } from '../constants/colors';
+import { useTheme } from '../constants/ThemeContext';
 
 interface Props {
   label: string;
-  level: string; // "low", "moderate", "high" veya Türkçe
+  level: string;
   value?: number | null;
   unit?: string;
 }
@@ -21,29 +22,31 @@ const getLevelInfo = (level: string): { color: string; text: string; width: Dime
 };
 
 const NutrientBar: React.FC<Props> = ({ label, level, value, unit }) => {
+  const { colors } = useTheme();
   const info = getLevelInfo(level);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>{label}</Text>
-        <View style={[styles.levelBadge, { backgroundColor: info.color + '25' }]}>
-          <View style={[styles.levelDot, { backgroundColor: info.color }]} />
+        <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>
+        <View style={[styles.levelBadge, { backgroundColor: info.color + '15' }]}>
+          <View style={[styles.levelDot, { backgroundColor: info.color, shadowColor: info.color }]} />
           <Text style={[styles.levelText, { color: info.color }]}>{info.text}</Text>
         </View>
       </View>
       {value !== undefined && value !== null && (
-        <Text style={styles.value}>
+        <Text style={[styles.value, { color: colors.textMuted }]}>
           {value.toFixed(1)}g / 100g
         </Text>
       )}
-      <View style={styles.barBackground}>
+      <View style={[styles.barBackground, { backgroundColor: colors.divider }]}>
         <View
           style={[
             styles.barFill,
             {
               width: info.width,
               backgroundColor: info.color,
+              shadowColor: info.color,
             },
           ]}
         />
@@ -54,7 +57,7 @@ const NutrientBar: React.FC<Props> = ({ label, level, value, unit }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 6,
+    marginVertical: 8,
   },
   header: {
     flexDirection: 'row',
@@ -63,42 +66,47 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   label: {
-    color: Colors.textPrimary,
     fontSize: FontSize.md,
     fontWeight: '600',
   },
   value: {
-    color: Colors.textMuted,
-    fontSize: FontSize.sm,
-    marginBottom: 4,
+    fontSize: FontSize.xs,
+    marginBottom: 6,
+    fontWeight: '500',
   },
   levelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: BorderRadius.round,
     gap: 5,
   },
   levelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
   levelText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   barBackground: {
     height: 6,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 3,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
     borderRadius: 3,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
   },
 });
 

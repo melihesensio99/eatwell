@@ -19,9 +19,19 @@ namespace Persistence.Repositories
             _context = context;
         }
 
+        public async Task<DailyLog?> GetByIdAsync(int id)
+        {
+            return await _context.Set<DailyLog>().FindAsync(id);
+        }
+
         public async Task AddAsync(DailyLog dailyLog)
         {
             await _context.Set<DailyLog>().AddAsync(dailyLog);
+        }
+
+        public void Delete(DailyLog dailyLog)
+        {
+            _context.Set<DailyLog>().Remove(dailyLog);
         }
 
         public async Task<List<DailyLog>> GetDailyLogsByDateAsync(string deviceId, DateTime date)

@@ -1,31 +1,13 @@
 import { API_CONFIG } from '../constants/api';
 import httpService from './httpService';
 
-export interface AddConsumptionRequest {
-  deviceId: string;
-  code: string;
-  amount: number;
-  date?: string;
-}
+import {
+  AddConsumptionRequest,
+  DailySummaryDto,
+  CalorieGoalResponse,
+  SetCalorieGoalRequest
+} from '../types/dailyLog';
 
-export interface ConsumedItemDto {
-  code: string;
-  productName?: string;
-  amount: number;
-  calories: number;
-  protein: number;
-  fat: number;
-  carb: number;
-}
-
-export interface DailySummaryDto {
-  date: string;
-  totalCalorie: number;
-  totalFat: number;
-  totalProtein: number;
-  totalCarb: number;
-  consumedItems: ConsumedItemDto[];
-}
 
 class DailyLogService {
   async addConsumption(deviceId: string, code: string, amount: number, date?: Date): Promise<void> {
@@ -43,7 +25,31 @@ class DailyLogService {
     const params = date ? `?date=${date.toISOString()}` : '';
     return httpService.get<DailySummaryDto>(url + params);
   }
+
+  async deleteConsumption(logId: number, deviceId: string): Promise<void> {
+    const url = `${API_CONFIG.ENDPOINTS.DAILY_LOG_DELETE || '/dailylog'}/${logId}?deviceId=${deviceId}`;
+    return httpService.delete(url);
+  }
+
+  async updateConsumption(logId: number, deviceId: string, amount: number): Promise<void> {
+    const url = `${API_CONFIG.ENDPOINTS.DAILY_LOG_UPDATE || '/dailylog'}/${logId}?deviceId=${deviceId}`;
+    return httpService.put(url, { amount });
+  }
 }
 
 export const dailyLogService = new DailyLogService();
+
+
+
+class CalorieGoalService {
+  async getGoal(deviceId: string): Promise<{ hasGoal: boolean; goal?: CalorieGoalResponse }> {
+    return httpService.get(`${API_CONFIG.ENDPOINTS.CALORIE_GOAL_GET}?deviceId=${deviceId}`);
+  }
+
+  async setGoal(deviceId: string, data: SetCalorieGoalRequest): Promise<{ message: string; goal: CalorieGoalResponse }> {
+    return httpService.post(`${API_CONFIG.ENDPOINTS.CALORIE_GOAL_SET}?deviceId=${deviceId}`, data);
+  }
+}
+
+export const calorieGoalService = new CalorieGoalService();
 export default dailyLogService;

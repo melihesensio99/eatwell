@@ -2,6 +2,7 @@
 using Application.Abstracts.Services.ExternalServices;
 using Application.DTOs;
 using Application.DTOs.ExternalDtos;
+using Application.Exceptions;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Entities;
@@ -13,20 +14,27 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class FoodAnalysisService : IIFoodAnalysisService
+    public class FoodAnalysisService : IFoodAnalysisService
     {
         private readonly IProductService _productService;
+        private readonly IUserAllergenService _allergenService;
         private readonly IMapper _mapper;
 
-        public FoodAnalysisService(IProductService productService, IMapper mapper)
+        public FoodAnalysisService(IProductService productService, IUserAllergenService allergenService, IMapper mapper)
         {
             _productService = productService;
+            _allergenService = allergenService;
             _mapper = mapper;
         }
 
-        public async Task<ProductAnalysisDto> AnalyzeProduct(string barcode)
+        public async Task<ProductAnalysisDto> AnalyzeProduct(string barcode, string? deviceId = null)
         {
+            if (string.IsNullOrWhiteSpace(barcode))
+                throw new ValidationException("Barkod değeri boş olamaz");
+
             var result = await _productService.GetAndifExistSaveProductAsync(barcode);
+            if (result == null)
+                throw new NotFoundException("Ürün", barcode);
 
             var dto = _mapper.Map<ProductAnalysisDto>(result);
 
@@ -34,13 +42,25 @@ namespace Infrastructure.Services
             int score = HealthScoreCalculator.Calculate(result);
             dto.IsHealthy = score >= 70;
 
-            var warnings = new List<string>();
-            if (result.Fat?.ToLower() == "high") warnings.Add("Yağ oranı yüksek");
-            if (result.Salt?.ToLower() == "high") warnings.Add("Tuz oranı yüksek");
-            if (result.SaturatedFat?.ToLower() == "high") warnings.Add("Doymuş yağ yüksek");
-            if (result.Sugars?.ToLower() == "high") warnings.Add("Şeker oranı yüksek");
 
             dto.Score = score;
+
+            if (!string.IsNullOrEmpty(deviceId))
+            {
+                var userAllergens = await _allergenService.GetUserAllergensAsync(deviceId);
+                if (userAllergens.Count > 0)
+                {
+                    var detected = AllergenDictionary.FindMatchingAllergens(
+                        result.AllergensHierarchy, result.AllergensFromIngredients, userAllergens);
+
+                    dto.AllergenWarning = new AllergenWarningDto
+                    {
+                        HasAllergenWarning = detected.Count > 0,
+                        DetectedAllergens = detected
+                    };
+                }
+            }
+
             return dto;
         }
     }

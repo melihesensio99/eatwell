@@ -12,6 +12,7 @@ namespace Application.Mappings
 
 
             CreateMap<OpenFoodResponseDto, Product>()
+                .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product!.ProductName))
                 .ForMember(dest => dest.ImageFrontUrl, opt => opt.MapFrom(src => src.Product!.ImageFrontUrl))
                 .ForMember(dest => dest.AdditivesN, opt => opt.MapFrom(src => src.Product!.AdditivesN))
@@ -41,6 +42,7 @@ namespace Application.Mappings
                 .ForMember(dest => dest.Score, opt => opt.Ignore())
                 .ForMember(dest => dest.IsHealthy, opt => opt.Ignore())
                 .ForMember(dest => dest.AdditiveDescriptions, opt => opt.Ignore())
+                .ForMember(dest => dest.AllergenWarning, opt => opt.Ignore())
                 .ReverseMap();
 
             CreateMap<Product, FoodCalorieInfoDto>()

@@ -1,7 +1,4 @@
-﻿using Application.Helpers;
-using static Application.Helpers.CalculateCaloriePercent;
-
-namespace Application.DTOs
+﻿namespace Application.DTOs
 {
     public class FoodCalorieInfoDto
     {
@@ -13,7 +10,7 @@ namespace Application.DTOs
         public float? SaturatedFat100g { get; set; }
         public float? Salt100g { get; set; }
         public float? EnergyKcal100g { get; set; } // 100g'daki kalori
-        public CaloriePercent? CaloriePercentInfo { get; set; }
+        public CaloriePercentDto? CaloriePercentInfo { get; set; }
        
     }
 }

@@ -10,6 +10,10 @@ import {
   SplashScreen,
   OnboardingScreen,
   DailySummaryScreen,
+
+  CalorieGoalScreen,
+  AllergenSettingsScreen,
+  ChatScreen,
 } from './src/screens';
 import { ThemeProvider, useTheme } from './src/constants/ThemeContext';
 
@@ -85,6 +89,31 @@ function AppNavigator() {
           options={{
             title: 'Günlük Özet',
             headerBackTitle: 'Kalori',
+          }}
+        />
+        <Stack.Screen
+          name="CalorieGoal"
+          component={CalorieGoalScreen}
+          options={{
+            title: 'Kalori Hedefi',
+            headerBackTitle: 'Geri',
+          }}
+
+        />
+        <Stack.Screen
+          name="AllergenSettings"
+          component={AllergenSettingsScreen}
+          options={{
+            title: 'Alerjen Ayarları',
+            headerBackTitle: 'Geri',
+          }}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{
+            title: 'AI Beslenme Asistanı',
+            headerBackTitle: 'Geri',
           }}
         />
       </Stack.Navigator>
