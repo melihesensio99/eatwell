@@ -14,9 +14,9 @@ namespace Infrastructure.Services.ExternalServices
         public GeminiService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["Gemini:ApiKey"]
+            _apiKey = configuration["Gemini:ApiKey"]?.Trim()
                 ?? throw new InvalidOperationException("Gemini API key bulunamadı. appsettings.json'a 'Gemini:ApiKey' ekleyin.");
-            _model = configuration["Gemini:Model"] ?? "gemini-2.0-flash";
+            _model = configuration["Gemini:Model"]?.Trim() ?? "gemini-2.0-flash";
         }
 
         public async Task<string> GenerateContentAsync(string systemPrompt, List<(string role, string content)> messages)
@@ -25,7 +25,21 @@ namespace Infrastructure.Services.ExternalServices
 
             var contents = new List<object>();
 
-           
+            // Sistem promptunu ilk mesaj olarak ekle (tüm API sürümleriyle uyumlu)
+            if (!string.IsNullOrEmpty(systemPrompt))
+            {
+                contents.Add(new
+                {
+                    role = "user",
+                    parts = new[] { new { text = systemPrompt } }
+                });
+                contents.Add(new
+                {
+                    role = "model",
+                    parts = new[] { new { text = "Anladım, bu talimatlara göre yanıt vereceğim." } }
+                });
+            }
+
             foreach (var msg in messages)
             {
                 contents.Add(new
@@ -37,10 +51,6 @@ namespace Infrastructure.Services.ExternalServices
 
             var requestBody = new
             {
-                system_instruction = new
-                {
-                    parts = new[] { new { text = systemPrompt } }
-                },
                 contents = contents,
                 generationConfig = new
                 {

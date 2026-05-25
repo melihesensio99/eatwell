@@ -17,7 +17,7 @@ namespace Infrastructure
             services.AddScoped<IUserAllergenService, UserAllergenService>();
             services.AddScoped<ICalorieGoalService, CalorieGoalService>();
             services.AddHttpClient<IFoodApiClient, FoodApiClient>();
-            services.AddHttpClient<IGeminiService, GeminiService>();
+            services.AddHttpClient<IGeminiService, MistralService>();
             services.AddScoped<IAiChatService, AiChatService>();
             services.AddScoped<IProductSearchService, ProductSearchService>();
         }

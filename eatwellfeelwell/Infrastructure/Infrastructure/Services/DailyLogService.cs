@@ -118,6 +118,7 @@ namespace Infrastructure.Services
                 summary.CalorieGoal = goalValue.Value;
                 summary.CalorieRemaining = goalValue.Value - summary.TotalCalorie;
                 summary.CalorieGoalPercentage = (summary.TotalCalorie / goalValue.Value) * 100f;
+                
             }
 
             return summary;

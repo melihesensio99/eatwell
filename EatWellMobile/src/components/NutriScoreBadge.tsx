@@ -1,53 +1,70 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, BorderRadius, FontSize, Spacing } from '../constants/colors';
+import { useTheme } from '../constants/ThemeContext';
 
 interface Props {
   grade: string | null;
 }
 
-const gradeColors: Record<string, string> = {
-  a: Colors.nutriScoreA,
-  b: Colors.nutriScoreB,
-  c: Colors.nutriScoreC,
-  d: Colors.nutriScoreD,
-  e: Colors.nutriScoreE,
-};
+const grades = ['a', 'b', 'c', 'd', 'e'];
 
-const gradeDescriptions: Record<string, string> = {
-  a: 'Çok iyi besin kalitesi! Bu ürün beslenme açısından en iyi kategoride yer alıyor.',
-  b: 'İyi besin kalitesi. Düzenli tüketim için uygun bir ürün.',
-  c: 'Orta düzey besin kalitesi. Dengeli bir beslenme içinde makul miktarda tüketilebilir.',
-  d: 'Düşük besin kalitesi. Tüketimi sınırlı tutmanız önerilir.',
-  e: 'Çok düşük besin kalitesi. Mümkün olduğunca az tüketilmesi önerilir.',
+const gradeConfig: Record<string, { colors: [string, string]; description: string }> = {
+  a: { colors: ['#16a34a', '#22c55e'], description: 'Çok iyi besin kalitesi! Düzenli tüketim için oldukça uygun.' },
+  b: { colors: ['#65a30d', '#84cc16'], description: 'İyi besin kalitesi. Dengeli beslenme için uygun.' },
+  c: { colors: ['#ca8a04', '#eab308'], description: 'Orta düzey. Dengeli beslenme içinde makul miktarda tüketilebilir.' },
+  d: { colors: ['#ea580c', '#f97316'], description: 'Düşük besin kalitesi. Tüketimi sınırlı tutmanız önerilir.' },
+  e: { colors: ['#dc2626', '#ef4444'], description: 'Çok düşük besin kalitesi. Mümkün olduğunca az tüketilmeli.' },
 };
 
 const NutriScoreBadge: React.FC<Props> = ({ grade }) => {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   if (!grade) return null;
-
   const letter = grade.toLowerCase();
-  const color = gradeColors[letter] || Colors.textMuted;
-  const description = gradeDescriptions[letter] || '';
+  const config = gradeConfig[letter] ?? { colors: ['#6b7280', '#9ca3af'] as [string,string], description: '' };
 
-  const toggleExpand = () => {
+  const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded(!expanded);
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={toggleExpand} activeOpacity={0.7}>
-      <Text style={styles.title}>Nutri-Score</Text>
-      
-      <View style={[styles.badge, { backgroundColor: color }]}>
-        <Text style={styles.badgeText}>{letter.toUpperCase()}</Text>
+    <TouchableOpacity onPress={toggle} activeOpacity={0.85} style={styles.wrapper}>
+      {/* Başlık */}
+      <View style={styles.headerRow}>
+        <Text style={[styles.title, { color: colors.textMuted }]}>📊  NUTRI-SCORE</Text>
+        <Text style={[styles.tapHint, { color: colors.textMuted }]}>{expanded ? '▲' : '▼'}</Text>
       </View>
 
-      {/* Kompakt Bilgi Kartı */}
+      {/* Skala çubuğu */}
+      <View style={styles.scaleBar}>
+        {grades.map((g) => {
+          const cfg = gradeConfig[g];
+          const isActive = g === letter;
+          return (
+            <LinearGradient
+              key={g}
+              colors={cfg.colors}
+              style={[
+                styles.scaleSegment,
+                isActive && styles.activeSegment,
+              ]}
+            >
+              <Text style={[styles.scaleLabel, isActive && styles.activeLetter]}>
+                {g.toUpperCase()}
+              </Text>
+            </LinearGradient>
+          );
+        })}
+      </View>
+
+      {/* Aktif grade açıklaması */}
       {expanded && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>{description}</Text>
+        <View style={[styles.infoBox, { backgroundColor: colors.backgroundLight, borderColor: colors.border }]}>
+          <Text style={[styles.infoText, { color: colors.textPrimary }]}>{config.description}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -55,51 +72,62 @@ const NutriScoreBadge: React.FC<Props> = ({ grade }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 8,
-    width: '100%',
+    marginBottom: Spacing.sm,
   },
   title: {
-    color: Colors.textSecondary,
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: FontSize.xs,
+    fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  badge: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    marginBottom: 4,
+  tapHint: {
+    fontSize: 10,
+    fontWeight: '600',
   },
-  badgeText: {
-    fontSize: FontSize.xxl,
-    color: '#FFFFFF',
+  scaleBar: {
+    flexDirection: 'row',
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    gap: 2,
+  },
+  scaleSegment: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: BorderRadius.md,
+    opacity: 0.35,
+  },
+  activeSegment: {
+    opacity: 1,
+    transform: [{ scaleY: 1.15 }],
+  },
+  scaleLabel: {
+    color: '#fff',
+    fontSize: FontSize.sm,
     fontWeight: '800',
   },
-  infoCard: {
-    marginTop: 8,
-    backgroundColor: Colors.background,
-    padding: 10,
-    borderRadius: BorderRadius.md,
+  activeLetter: {
+    fontSize: FontSize.md,
+  },
+  infoBox: {
+    marginTop: Spacing.sm,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
-    width: '100%',
+    padding: Spacing.sm,
   },
   infoText: {
-    color: Colors.textSecondary,
-    fontSize: FontSize.sm,
-    textAlign: 'center',
+    fontSize: FontSize.xs,
     lineHeight: 18,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

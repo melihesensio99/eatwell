@@ -22,6 +22,7 @@ export interface ProductAnalysis {
   score: number;
   isHealthy: boolean;
   allergenWarning?: AllergenWarning;
+  aiAnalysis: string | null;
 }
 
 export interface AllergenWarning {

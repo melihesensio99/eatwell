@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,9 +22,11 @@ namespace Application.DTOs
         [JsonProperty("saturated-fat")]
         public string SaturatedFat { get; set; }
         public string Sugars { get; set; }
+        public string EnergyKcal { get; set; }
         public int Score { get; set; }
         public bool IsHealthy { get; set; }
         public string[]? AllergensHierarchy { get; set; }
         public AllergenWarningDto? AllergenWarning { get; set; }
+        public string? AiAnalysis { get; set; }
     }
 }

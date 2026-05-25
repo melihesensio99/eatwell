@@ -18,6 +18,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSignalR();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices();
@@ -37,7 +38,10 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// ✅ Global Exception Handler — EN ÜSTTEKİ middleware
+// ✅ CORS en üstte olmalı ki hata durumlarında bile tarayıcı cevabı alabilsin
+app.UseCors("AllowAll");
+
+// ✅ Global Exception Handler
 app.UseGlobalExceptionHandler();
 
 // Configure the HTTP request pipeline.
@@ -54,8 +58,6 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
-
-app.UseCors("AllowAll");
 
 app.UseAuthorization();
 

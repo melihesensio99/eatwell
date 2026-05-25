@@ -21,6 +21,7 @@ import {
   HealthBadge,
   LoadingSpinner,
 } from '../components';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Props {
   route: any;
@@ -35,32 +36,58 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
   const [error, setError] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const headerLineAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     fetchAnalysis();
   }, [barcode]);
 
   const fetchAnalysis = async () => {
+    console.log(`[Analysis] ${barcode} barkodu için analiz başlatılıyor...`);
     try {
       setLoading(true);
       setError(null);
       const deviceId = await getDeviceId();
+      console.log(`[Analysis] DeviceId: ${deviceId}`);
       const result = await productService.getProductAnalysis(barcode, deviceId);
+      console.log('[Analysis] Veri başarıyla alındı:', result.productName);
       setData(result);
       
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 700,
+          duration: 800,
           useNativeDriver: true,
         }),
-        Animated.timing(slideAnim, {
+        Animated.spring(slideAnim, {
           toValue: 0,
-          duration: 700,
-          easing: Easing.out(Easing.back(1.1)),
+          tension: 20,
+          friction: 7,
           useNativeDriver: true,
+        }),
+        Animated.timing(headerLineAnim, {
+          toValue: 1,
+          duration: 1000,
+          delay: 400,
+          useNativeDriver: false,
         }),
       ]).start();
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: -8,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
     } catch (err: any) {
       setError(
         err.response?.status === 404
@@ -70,6 +97,21 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getAllergenIcon = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes('süt') || lower.includes('milk') || lower.includes('laktoz')) return '🥛';
+    if (lower.includes('yumurta') || lower.includes('egg')) return '🥚';
+    if (lower.includes('fıstık') || lower.includes('peanut')) return '🥜';
+    if (lower.includes('kuruyemiş') || lower.includes('nut') || lower.includes('fındık')) return '🌰';
+    if (lower.includes('soya') || lower.includes('soy')) return '🫘';
+    if (lower.includes('buğday') || lower.includes('wheat') || lower.includes('gluten')) return '🌾';
+    if (lower.includes('balık') || lower.includes('fish')) return '🐟';
+    if (lower.includes('kabuklu') || lower.includes('sea')) return '🦐';
+    if (lower.includes('susam') || lower.includes('sesame')) return '🥯';
+    if (lower.includes('hardal') || lower.includes('mustard')) return '🥣';
+    return '⚠️';
   };
 
   if (loading) {
@@ -101,127 +143,162 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <ScrollView 
       style={[styles.container, { backgroundColor: colors.background }]} 
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-        {/* Ürün Bilgisi */}
-        <View style={[styles.header, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-          {data.imageFrontUrl ? (
-            <View style={styles.imageWrap}>
-              <Image
-                source={{ uri: data.imageFrontUrl }}
-                style={styles.productImage}
-                resizeMode="contain"
-              />
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          {/* Hero Section - Ürün Bilgisi */}
+          <View style={[styles.heroCard, { backgroundColor: colors.backgroundCard }]}>
+            <Animated.View style={[styles.imageSection, { transform: [{ translateY: floatAnim }] }]}>
+              {data.imageFrontUrl ? (
+                <View style={styles.imageGlow}>
+                  <Image
+                    source={{ uri: data.imageFrontUrl }}
+                    style={styles.productImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : (
+                <View style={[styles.imagePlaceholder, { backgroundColor: colors.backgroundLight }]}>
+                  <Text style={styles.imageEmoji}>📦</Text>
+                </View>
+              )}
+            </Animated.View>
+            <View style={styles.heroInfo}>
+              <View style={[styles.barcodeBadge, { backgroundColor: colors.backgroundLight }]}>
+                <Text style={[styles.barcodeText, { color: colors.textMuted }]}>{barcode}</Text>
+              </View>
+              <Text style={[styles.productTitle, { color: colors.textPrimary }]}>
+                {data.productName || 'Bilinmeyen Ürün'}
+              </Text>
             </View>
-          ) : (
-            <View style={[styles.productImagePlaceholder, { backgroundColor: colors.backgroundLight, borderColor: colors.border }]}>
-              <Text style={styles.productImagePlaceholderText}>📦</Text>
-            </View>
+          </View>
+
+          {/* Akıllı Analiz - Premium Spotlight */}
+          {data.aiAnalysis && (
+            <AiAnalysisCard text={data.aiAnalysis} navigation={navigation} productName={data.productName} />
           )}
-          <View style={[styles.barcodeChip, { backgroundColor: colors.backgroundLight }]}>
-            <Text style={[styles.barcodeLabel, { color: colors.textMuted }]}>{barcode}</Text>
-          </View>
-          <Text style={[styles.productName, { color: colors.textPrimary }]}>
-            {data.productName || 'Bilinmeyen Ürün'}
-          </Text>
-        </View>
 
-        {/* Alerjen Uyarısı */}
-        {data.allergenWarning && data.allergenWarning.hasAllergenWarning && (
-          <View style={[styles.warningContainer, { backgroundColor: Colors.accentRed + '15', borderColor: Colors.accentRed + '30' }]}>
-            <View style={styles.warningHeader}>
-              <Text style={styles.warningIcon}>⚠️</Text>
-              <Text style={[styles.warningTitle, { color: Colors.accentRed }]}>Alerjen Uyarısı</Text>
-            </View>
-            <Text style={[styles.warningText, { color: colors.textPrimary }]}>
-              Bu ürün, profilinizde işaretlediğiniz alerjenleri içermektedir:
-            </Text>
-            <View style={styles.warningTags}>
-              {data.allergenWarning.detectedAllergens.map((allergen, index) => (
-                <View key={index} style={[styles.warningTag, { backgroundColor: Colors.accentRed }]}>
-                   <Text style={styles.warningTagText}>{allergen}</Text>
+          {/* Alerjen Uyarısı - Soft Alert */}
+          {data.allergenWarning && data.allergenWarning.hasAllergenWarning && (
+            <View style={[styles.alertCard, { borderColor: Colors.accentRed + '30' }]}>
+              <View style={styles.alertHeader}>
+                <View style={[styles.alertIconWrap, { backgroundColor: Colors.accentRed + '10' }]}>
+                  <Text style={styles.alertIcon}>⚠️</Text>
                 </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Sağlık Durumu - Skor */}
-        <HealthBadge score={data.score} />
-
-        {/* Nutri-Score & NOVA */}
-        <View style={styles.badgesRow}>
-          <View style={[styles.badgeContainer, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-            <NutriScoreBadge grade={data.nutritionGrades} />
-          </View>
-          <View style={[styles.badgeContainer, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-            <NovaGroupBadge group={data.novaGroup} />
-          </View>
-        </View>
-
-        {/* Besin Seviyeleri */}
-        <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>📊</Text>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Besin Seviyeleri</Text>
-          </View>
-          <NutrientBar label="Yağ" level={data.fat} />
-          <NutrientBar label="Doymuş Yağ" level={data.saturatedFat} />
-          <NutrientBar label="Şeker" level={data.sugars} />
-          <NutrientBar label="Tuz" level={data.salt} />
-        </View>
-
-        {/* Katkı Maddeleri */}
-        {data.additivesTags && data.additivesTags.length > 0 && (
-          <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionIcon}>🧪</Text>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Katkı Maddeleri</Text>
-            </View>
-            <View style={styles.additivesContainer}>
-              {data.additivesTags.map((tag, index) => (
-                <View key={index} style={styles.additiveChip}>
-                  <Text style={styles.additiveText}>
-                    {tag.replace('en:', '').toUpperCase()}
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.alertTitle, { color: Colors.accentRed }]}>Alerjen Uyarısı</Text>
+                  <Text style={[styles.alertSubtitle, { color: colors.textMuted }]}>
+                    Profil kısıtlamalarınızla uyuşmayan içerik
                   </Text>
                 </View>
-              ))}
-            </View>
-            {data.additiveDescriptions && data.additiveDescriptions.length > 0 && (
-              <View style={styles.additiveDescriptions}>
-                {data.additiveDescriptions.map((desc, i) => (
-                  <Text key={i} style={[styles.additiveDescText, { color: colors.textSecondary }]}>
-                    • {desc}
-                  </Text>
+              </View>
+              <View style={styles.alertTags}>
+                {data.allergenWarning.detectedAllergens.map((allergen, index) => (
+                  <View key={index} style={[styles.alertTag, { borderColor: Colors.accentRed + '40', backgroundColor: '#fff' }]}>
+                    <Text style={{ fontSize: 14, marginRight: 4 }}>{getAllergenIcon(allergen)}</Text>
+                    <Text style={[styles.alertTagText, { color: Colors.accentRed }]}>{allergen}</Text>
+                  </View>
                 ))}
               </View>
-            )}
-          </View>
-        )}
+            </View>
+          )}
 
-        {/* Kalori Detayları Butonu */}
-        <TouchableOpacity
-          style={styles.calorieButton}
-          onPress={() =>
-            navigation.navigate('Calorie', {
-              barcode,
-              productName: data.productName,
-            })
-          }
-          activeOpacity={0.85}
-        >
-          <View style={styles.calorieBtnGlow}>
-            <Text style={styles.calorieButtonIcon}>🔥</Text>
+          {/* Sağlık & Besin Değerleri Grid */}
+          <View style={styles.sectionHeaderWrap}>
+            <Animated.View 
+              style={[
+                styles.titleLine, 
+                { 
+                  backgroundColor: colors.primary + '20',
+                  width: headerLineAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) 
+                }
+              ]} 
+            />
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Genel Analiz</Text>
+            <Animated.View 
+              style={[
+                styles.titleLine, 
+                { 
+                  backgroundColor: colors.primary + '20',
+                  width: headerLineAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) 
+                }
+              ]} 
+            />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.calorieButtonText}>Kalori Detayları</Text>
-            <Text style={styles.calorieButtonSub}>Besin değerlerini incele</Text>
+
+          <HealthBadge score={data.score} />
+
+          <View style={styles.gridRow}>
+            <View style={[styles.gridItem, { backgroundColor: colors.backgroundCard }]}>
+              <NutriScoreBadge grade={data.nutritionGrades} />
+            </View>
+            <View style={[styles.gridItem, { backgroundColor: colors.backgroundCard }]}>
+              <NovaGroupBadge group={data.novaGroup} />
+            </View>
           </View>
-          <Text style={styles.calorieButtonArrow}>→</Text>
-        </TouchableOpacity>
-      </Animated.View>
+
+          {/* Besin Seviyeleri - Modern Card */}
+          <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+            <View style={styles.cardHeader}>
+              <Text style={[styles.cardHeaderTitle, { color: colors.textPrimary }]}>Besin Seviyeleri</Text>
+              <Text style={styles.cardHeaderSub}>100g porsiyon için</Text>
+            </View>
+            <View style={styles.cardContent}>
+              <NutrientBar label="Yağ" level={data.fat} />
+              <NutrientBar label="Doymuş Yağ" level={data.saturatedFat} />
+              <NutrientBar label="Şeker" level={data.sugars} />
+              <NutrientBar label="Tuz" level={data.salt} />
+            </View>
+          </View>
+
+          {/* Katkı Maddeleri - Minimalist */}
+          {data.additivesTags && data.additivesTags.length > 0 && (
+            <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+              <View style={styles.cardHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ fontSize: 20 }}>🔬</Text>
+                  <Text style={[styles.cardHeaderTitle, { color: colors.textPrimary }]}>İçerik Analizi</Text>
+                </View>
+                <View style={[styles.countBadge, { backgroundColor: Colors.accentOrange + '15' }]}>
+                  <Text style={[styles.countText, { color: Colors.accentOrange }]}>{data.additivesTags.length} Madde</Text>
+                </View>
+              </View>
+              <View style={styles.additivesGrid}>
+                {data.additivesTags.map((tag, index) => (
+                  <View key={index} style={[styles.additivePill, { borderColor: Colors.accentOrange + '30' }]}>
+                    <Text style={[styles.additivePillText, { color: Colors.accentOrange }]}>
+                      {tag.replace('en:', '').toUpperCase()}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Action Button - Premium CTA */}
+          <TouchableOpacity
+            style={[styles.ctaButton, { backgroundColor: Colors.accentOrange }]}
+            onPress={() => navigation.navigate('Calorie', { barcode, productName: data.productName })}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={[Colors.accentOrange, '#f59e0b']}
+              style={styles.ctaGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <View style={styles.ctaIconWrap}>
+                <Text style={styles.ctaIcon}>🔥</Text>
+              </View>
+              <View style={styles.ctaInfo}>
+                <Text style={styles.ctaTitle}>Detaylı Besin Değerleri</Text>
+                <Text style={styles.ctaSub}>Kalori ve makro besinleri incele</Text>
+              </View>
+              <Text style={styles.ctaArrow}>→</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
     </ScrollView>
   );
 };
@@ -229,252 +306,523 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F8FAFC', // Apple tarzı hafif kırık beyaz arka plan
   },
-  contentContainer: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl + 20,
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
   },
-  header: {
-    marginBottom: Spacing.md,
-    alignItems: 'center',
+  scrollContent: {
+    paddingHorizontal: 32,
+    paddingTop: Spacing.lg,
+    paddingBottom: 40, // Boşluk 80'den 40'a düşürüldü
+  },
+  // Hero Card Styles
+  heroCard: {
     borderRadius: BorderRadius.xxl,
-    padding: Spacing.lg,
+    padding: Spacing.md,
+    alignItems: 'center',
+    marginBottom: Spacing.md, // Boşluk azaltıldı
+    backgroundColor: '#FFFFFF', // Kartı zeminden ayırmak için tam beyaz
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
-  imageWrap: {
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
+  imageSection: {
+    marginBottom: Spacing.lg,
+    width: '100%',
+    alignItems: 'center',
+  },
+  imageGlow: {
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
   },
   productImage: {
     width: 200,
     height: 200,
     borderRadius: BorderRadius.xl,
-    backgroundColor: 'transparent',
   },
-  productImagePlaceholder: {
+  imagePlaceholder: {
     width: 200,
     height: 200,
     borderRadius: BorderRadius.xl,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    borderWidth: 1,
   },
-  productImagePlaceholderText: {
-    fontSize: 72,
+  imageEmoji: {
+    fontSize: 64,
   },
-  barcodeChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+  heroInfo: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  barcodeBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: BorderRadius.round,
-    marginBottom: Spacing.sm,
+    marginBottom: 8,
   },
-  barcodeLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-    letterSpacing: 0.5,
+  barcodeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
-  productName: {
-    fontSize: 24,
+  productTitle: {
+    fontSize: 28,
     fontWeight: '900',
-    lineHeight: 32,
     textAlign: 'center',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
+    lineHeight: 34,
   },
-  badgesRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginVertical: Spacing.sm,
-  },
-  badgeContainer: {
-    flex: 1,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+  // Alert Card Styles
+  alertCard: {
+    borderRadius: BorderRadius.xxl,
+    padding: Spacing.xl,
+    marginBottom: Spacing.md, // Boşluk azaltıldı
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
-  card: {
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginVertical: Spacing.xs,
-    borderWidth: 1,
-  },
-  sectionHeader: {
+  alertHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
-  sectionIcon: {
+  alertIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertIcon: {
     fontSize: 20,
+  },
+  alertTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  alertSubtitle: {
+    fontSize: FontSize.xs,
+    fontWeight: '500',
+  },
+  alertTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  alertTag: {
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.round,
+    flexDirection: 'row', // Simge ve metni yan yana getirmek için
+    alignItems: 'center',
+  },
+  alertTagText: {
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  // Grid Styles
+  gridRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.lg, // Boşluk artırıldı
+  },
+  gridItem: {
+    flex: 1,
+    borderRadius: BorderRadius.xxl,
+    padding: Spacing.lg,
+    backgroundColor: '#FFFFFF', // Beyaz arka plan
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  // Common Card Styles
+  card: {
+    borderRadius: BorderRadius.xxl,
+    padding: Spacing.xl,
+    marginBottom: Spacing.lg,
+    backgroundColor: '#FFFFFF', // Zeminden ayrışması için
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  cardHeaderTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  cardHeaderSub: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    opacity: 0.6,
+  },
+  cardContent: {
+    gap: Spacing.xs,
+  },
+  // Section Header Wrap
+  sectionHeaderWrap: {
+    marginBottom: Spacing.md,
+    marginTop: Spacing.md, // Boşluk azaltıldı
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    justifyContent: 'center', // İçeriği ortala
   },
   sectionTitle: {
     fontSize: FontSize.lg,
-    fontWeight: '800',
-    letterSpacing: -0.3,
+    fontWeight: '900',
+    textTransform: 'none',
+    letterSpacing: -0.5,
+    opacity: 0.9,
+    textAlign: 'center',
   },
-  additivesContainer: {
+  titleLine: {
+    height: 1,
+    flex: 1,
+    borderRadius: 2,
+  },
+  // Additives Styles
+  additivesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.xs,
+    gap: 8,
   },
-  additiveChip: {
-    backgroundColor: Colors.accentOrange + '15',
-    paddingHorizontal: Spacing.sm,
+  additivePill: {
+    borderWidth: 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.round,
+  },
+  additivePillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  countBadge: {
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: BorderRadius.round,
-    borderWidth: 1,
-    borderColor: Colors.accentOrange + '25',
   },
-  additiveText: {
-    color: Colors.accentOrange,
-    fontSize: FontSize.xs,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+  countText: {
+    fontSize: 10,
+    fontWeight: '900',
   },
-  additiveDescriptions: {
-    marginTop: Spacing.md,
-  },
-  additiveDescText: {
-    fontSize: FontSize.sm,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  calorieButton: {
-    backgroundColor: Colors.accentOrange + '12',
+  // CTA Button Styles
+  ctaButton: {
     borderRadius: BorderRadius.xxl,
-    padding: Spacing.lg,
-    marginTop: Spacing.md,
+    overflow: 'hidden',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md, // Alt boşluk azaltıldı
+    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  ctaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.accentOrange + '30',
-    shadowColor: Colors.accentOrange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
+    padding: Spacing.xl,
   },
-  calorieBtnGlow: {
+  ctaIconWrap: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.accentOrange + '20',
+    backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
-  calorieButtonIcon: {
+  ctaIcon: {
     fontSize: 24,
   },
-  calorieButtonText: {
-    color: Colors.accentOrange,
+  ctaInfo: {
+    flex: 1,
+  },
+  ctaTitle: {
+    color: '#fff',
     fontSize: FontSize.lg,
-    fontWeight: '800',
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
-  calorieButtonSub: {
-    color: Colors.accentOrange,
+  ctaSub: {
+    color: 'rgba(255,255,255,0.85)',
     fontSize: FontSize.xs,
-    fontWeight: '500',
-    opacity: 0.7,
-    marginTop: 2,
+    fontWeight: '600',
   },
-  calorieButtonArrow: {
-    color: Colors.accentOrange,
-    fontSize: FontSize.xl,
+  ctaArrow: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '300',
+    marginLeft: Spacing.sm,
+  },
+  // AI Card Styles
+  aiCard: {
+    borderRadius: BorderRadius.xxl,
+    marginBottom: Spacing.md, // Boşluk azaltıldı
+    overflow: 'hidden',
+    elevation: 4,
+  },
+  aiCardInner: {
+    padding: Spacing.xl,
+  },
+  aiHeader: {
+    marginBottom: Spacing.lg,
+  },
+  aiTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  pointsList: {
+    gap: Spacing.md,
+  },
+  pointItem: {
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  pointIcon: {
+    marginRight: 10,
+  },
+  pointTitle: {
+    fontSize: FontSize.sm + 1,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  pointText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  promptContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: Spacing.md, // Boşluk azaltıldı
+    paddingTop: Spacing.md, // Boşluk azaltıldı
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  promptChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.round,
+    borderWidth: 1,
+  },
+  promptChipText: {
+    fontSize: 12,
     fontWeight: '700',
-    opacity: 0.6,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: Spacing.xxl,
   },
   errorIconWrap: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 77, 106, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: Spacing.lg,
   },
   errorEmoji: {
-    fontSize: 48,
+    fontSize: 64,
   },
   errorText: {
-    fontSize: FontSize.lg,
-    textAlign: 'center',
-    marginBottom: Spacing.lg,
-    lineHeight: 24,
-  },
-  retryButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    marginBottom: Spacing.md,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-  },
-  backButton: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-  },
-  backButtonText: {
     fontSize: FontSize.md,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
     fontWeight: '600',
   },
-  warningContainer: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-    marginBottom: Spacing.md,
-  },
-  warningHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-    gap: Spacing.sm,
-  },
-  warningIcon: {
-    fontSize: 20,
-  },
-  warningTitle: {
-    fontSize: FontSize.md,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  warningText: {
-    fontSize: FontSize.sm,
-    marginBottom: Spacing.md,
-    lineHeight: 20,
-  },
-  warningTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  warningTag: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 4,
+  retryButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
     borderRadius: BorderRadius.round,
+    marginBottom: Spacing.lg,
   },
-  warningTagText: {
-    color: '#FFF',
-    fontSize: FontSize.xs,
-    fontWeight: '700',
+  retryText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: FontSize.md,
+  },
+  backButton: {
+    padding: Spacing.md,
+  },
+  backButtonText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
   },
 });
+
+// AI Analizi Kartı Bileşeni
+const AiAnalysisCard: React.FC<{ text: string; navigation: any; productName: string | null }> = ({ text, navigation, productName }) => {
+  const { colors, isDark } = useTheme();
+  const [displayedText, setDisplayedText] = useState('');
+  const [index, setIndex] = useState(0);
+
+  // Markdown (**, __ vb.) temizleme fonksiyonu
+  const cleanMarkdown = (t: string) => {
+    return t.replace(/(\*\*|__|[*_])/g, '').trim();
+  };
+
+  useEffect(() => {
+    if (index < text.length) {
+      const timeout = setTimeout(() => {
+        // Hızı artırmak için her adımda 4 karakter birden ekleyelim
+        const nextIndex = Math.min(index + 4, text.length);
+        setDisplayedText(text.substring(0, nextIndex));
+        setIndex(nextIndex);
+      }, 5); // Bekleme süresini de 5ms'ye düşürdüm
+      return () => clearTimeout(timeout);
+    }
+  }, [index, text]);
+
+  // Metni maddelere ayır ve temizle
+  const points = displayedText
+    .split(/[•\n]/)
+    .map((p) => cleanMarkdown(p))
+    .filter((p) => p.length > 0);
+
+  const getIconForPoint = (point: string) => {
+    const lower = point.toLowerCase();
+    if (lower.startsWith('sonuç')) return '🎯';
+    if (lower.includes('özet')) return '📝';
+    if (lower.includes('nutri-score')) return '📊';
+    if (lower.includes('nova') || lower.includes('işlenmişlik')) return '🏭';
+    if (lower.includes('besin') || lower.includes('kalori') || lower.includes('değer')) return '⚡';
+    if (lower.includes('alerjen') || lower.includes('içerik')) return '⚠️';
+    return '✨';
+  };
+
+  const prompts = [
+    { label: 'Antrenman öncesi?', prompt: `Bu ${productName} antrenman öncesi uygun mu?` },
+    { label: 'Diyet tavsiyesi?', prompt: `Bu ${productName} ürününü diyetime nasıl uydururum?` },
+    { label: 'Daha sağlıklı ne var?', prompt: `Bu ${productName} yerine ne önerirsin?` },
+  ];
+
+  return (
+    <View style={styles.aiCard}>
+      <LinearGradient
+        colors={isDark ? ['#6366f1', '#a855f7'] : ['#e0e7ff', '#f3e8ff']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.aiCard}
+      >
+        <View style={[styles.aiCardInner, { backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.92)' }]}>
+          <View style={styles.aiHeader}>
+             <Text style={[styles.aiTitle, { color: colors.textPrimary }]}>✨ Akıllı Beslenme Analizi</Text>
+          </View>
+
+          <View style={styles.pointsList}>
+            {points.map((point, i) => {
+              const isResult = point.toLowerCase().startsWith('sonuç');
+              
+              // Başlık ve içeriği ayır (Örn: "Ürün Özeti: Harika bir ürün" -> ["Ürün Özeti", "Harika bir ürün"])
+              const parts = point.split(':');
+              const hasTitle = parts.length > 1;
+              const title = hasTitle ? parts[0].trim() : '';
+              const content = hasTitle ? parts.slice(1).join(':').trim() : point;
+
+              return (
+                <View 
+                  key={i} 
+                  style={[
+                    styles.pointItem, 
+                    { 
+                      backgroundColor: isResult 
+                        ? (isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)')
+                        : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                      borderLeftWidth: isResult ? 4 : 0,
+                      borderLeftColor: '#6366f1',
+                      paddingVertical: isResult ? Spacing.md : Spacing.sm,
+                      flexDirection: 'column', // Başlık ve içeriği alt alta veya yan yana daha iyi yönetmek için
+                      alignItems: 'flex-start'
+                    }
+                  ]}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: hasTitle ? 4 : 0 }}>
+                    <Text style={[styles.pointIcon, { fontSize: isResult ? 20 : 16 }]}>{getIconForPoint(point)}</Text>
+                    {hasTitle && (
+                      <Text style={[
+                        styles.pointTitle, 
+                        { 
+                          color: isResult ? '#6366f1' : colors.primary,
+                          fontWeight: '900',
+                          fontSize: isResult ? FontSize.md + 1 : FontSize.sm + 1,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5
+                        }
+                      ]}>
+                        {title}
+                      </Text>
+                    )}
+                  </View>
+                  
+                  <Text style={[
+                    styles.pointText, 
+                    { 
+                      color: colors.textPrimary,
+                      fontWeight: isResult ? '700' : '500',
+                      fontSize: isResult ? FontSize.md : FontSize.sm,
+                      fontStyle: isResult ? 'italic' : 'normal',
+                      marginLeft: hasTitle ? 0 : 4,
+                      lineHeight: 20
+                    }
+                  ]}>
+                    {content}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={styles.promptContainer}>
+            {prompts.map((p, i) => (
+              <TouchableOpacity
+                key={i}
+                style={[styles.promptChip, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '30' }]}
+                onPress={() => navigation.navigate('Chat', { initialMessage: p.prompt })}
+              >
+                <Text style={[styles.promptChipText, { color: colors.primary }]}>💬 {p.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </LinearGradient>
+    </View>
+  );
+};
 
 export default AnalysisScreen;

@@ -18,9 +18,10 @@ import { chatService, ChatMessage } from '../services/chatService';
 
 interface Props {
   navigation: any;
+  route: any;
 }
 
-const ChatScreen: React.FC<Props> = ({ navigation }) => {
+const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -99,6 +100,20 @@ const ChatScreen: React.FC<Props> = ({ navigation }) => {
       chatService.disconnect();
     };
   }, []);
+
+  // initialMessage takibi
+  useEffect(() => {
+    const initialMsg = route.params?.initialMessage;
+    if (initialMsg && isConnected && messages.length === 0) {
+      setInputText(initialMsg);
+      // Küçük bir gecikme ile gönder (UX için)
+      setTimeout(() => {
+        handleSend();
+        // Parametreyi temizle ki sayfa yenilendiğinde tekrar atmasın
+        navigation.setParams({ initialMessage: undefined });
+      }, 500);
+    }
+  }, [isConnected, route.params?.initialMessage]);
 
   // Yeni mesajda otomatik scroll
   useEffect(() => {

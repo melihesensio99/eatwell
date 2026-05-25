@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
@@ -23,6 +24,7 @@ const AllergenSettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [saving, setSaving] = useState(false);
   const [allAllergens, setAllAllergens] = useState<AllergenDto[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -54,16 +56,35 @@ const AllergenSettingsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSave = async () => {
+    console.log('[AllergenSettings] Kaydet butonuna basıldı. Seçili anahtarlar:', selectedKeys);
+    setErrorMessage(null);
     try {
       setSaving(true);
       const deviceId = await getDeviceId();
+      console.log('[AllergenSettings] DeviceId alındı:', deviceId);
+      
       await userAllergenService.setUserAllergens(deviceId, selectedKeys);
-      Alert.alert('Başarılı', 'Alerjen tercihleriniz kaydedildi.', [
-        { text: 'Tamam', onPress: () => navigation.goBack() }
-      ]);
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Hata', 'Kaydedilemedi.');
+      console.log('[AllergenSettings] Kayıt başarılı.');
+
+      const message = 'Alerjen tercihleriniz başarıyla kaydedildi.';
+      if (Platform.OS === 'web') {
+        window.alert(message);
+        navigation.goBack();
+      } else {
+        Alert.alert('Başarılı', message, [
+          { text: 'Tamam', onPress: () => navigation.goBack() }
+        ]);
+      }
+    } catch (error: any) {
+      console.error('[AllergenSettings] Kaydetme hatası:', error);
+      const errorText = error.response?.data?.message || 'Kaydedilemedi. Lütfen bağlantınızı kontrol edin.';
+      setErrorMessage(errorText);
+      
+      if (Platform.OS === 'web') {
+        window.alert('Hata: ' + errorText);
+      } else {
+        Alert.alert('Hata', errorText);
+      }
     } finally {
       setSaving(false);
     }
@@ -121,11 +142,9 @@ const AllergenSettingsScreen: React.FC<Props> = ({ navigation }) => {
             );
           })}
         </View>
-      </ScrollView>
-
-      <View style={[styles.footer, { backgroundColor: colors.backgroundCard, borderTopColor: colors.border }]}>
+        
         <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: colors.primary, opacity: saving ? 0.7 : 1 }]}
+          style={[styles.saveButton, { backgroundColor: colors.primary, opacity: saving ? 0.7 : 1, marginTop: Spacing.xl }]}
           onPress={handleSave}
           disabled={saving}
         >
@@ -135,7 +154,13 @@ const AllergenSettingsScreen: React.FC<Props> = ({ navigation }) => {
              <Text style={styles.saveButtonText}>Kaydet</Text>
           )}
         </TouchableOpacity>
-      </View>
+
+        {errorMessage && (
+          <Text style={{ color: '#ff4d6a', marginTop: Spacing.sm, textAlign: 'center', fontWeight: '600' }}>
+            {errorMessage}
+          </Text>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -191,14 +216,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  contentContainer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xl + 10, // safe area
-    borderTopWidth: 1,
+    paddingBottom: Spacing.xxl,
   },
   saveButton: {
     paddingVertical: 16,

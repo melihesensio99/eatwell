@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, BorderRadius, FontSize, Spacing } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 
@@ -8,89 +9,121 @@ interface Props {
 }
 
 const HealthBadge: React.FC<Props> = ({ score }) => {
-  const { colors } = useTheme();
-  
-  let color = Colors.accentRed;
-  let text = 'Düşük Besin Değeri';
-  let icon = '🔴';
-  let bgOpacity = '10';
+  const { colors, isDark } = useTheme();
+  const widthAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: score,
+      duration: 1200,
+      useNativeDriver: false,
+    }).start();
+  }, [score]);
+
+  let gradientColors: [string, string] = ['#ef4444', '#f97316'];
+  let label = 'Düşük Besin Değeri';
+  let emoji = '⚠️';
+  let labelColor = '#ef4444';
 
   if (score >= 70) {
-    color = Colors.healthy;
-    text = 'Mükemmel Seçim';
-    icon = '✅';
+    gradientColors = ['#22c55e', '#16a34a'];
+    label = 'Mükemmel Seçim';
+    emoji = '🏆';
+    labelColor = '#16a34a';
   } else if (score >= 50) {
-    color = Colors.accentOrange;
-    text = 'Orta Seviye';
-    icon = '⚠️';
+    gradientColors = ['#f59e0b', '#d97706'];
+    label = 'Orta Düzey';
+    emoji = '🔶';
+    labelColor = '#d97706';
   }
 
+  const barWidth = widthAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
   return (
-    <View style={styles.container}>
-      <View style={[styles.badge, { borderColor: color + '30', backgroundColor: color + bgOpacity }]}>
-        <View style={[styles.scoreRing, { borderColor: color + '40' }]}>
-          <View style={[styles.scoreCircle, { backgroundColor: colors.background, borderColor: color }]}>
-            <Text style={[styles.scoreText, { color }]}>{score}</Text>
-          </View>
+    <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
+      {/* Başlık */}
+      <View style={styles.topRow}>
+        <View>
+          <Text style={[styles.label, { color: labelColor }]}>{emoji}  {label}</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>100 üzerinden sağlık puanı</Text>
         </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color }]}>{text}</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>{score}/100 Sağlık Puanı</Text>
-        </View>
-        <Text style={styles.icon}>{icon}</Text>
+        <LinearGradient colors={gradientColors} style={styles.scorePill}>
+          <Text style={styles.scoreNumber}>{score}</Text>
+        </LinearGradient>
+      </View>
+
+      {/* Progress Bar */}
+      <View style={[styles.track, { backgroundColor: colors.backgroundLight }]}>
+        <Animated.View style={[styles.fill, { width: barWidth }]}>
+          <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+        </Animated.View>
+      </View>
+
+      {/* Scale hints */}
+      <View style={styles.scaleRow}>
+        <Text style={[styles.scaleText, { color: colors.textMuted }]}>Düşük</Text>
+        <Text style={[styles.scaleText, { color: colors.textMuted }]}>Orta</Text>
+        <Text style={[styles.scaleText, { color: colors.textMuted }]}>Mükemmel</Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: Spacing.xs,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
+  card: {
     borderRadius: BorderRadius.xxl,
-    padding: Spacing.md,
-    gap: Spacing.md,
+    borderWidth: 1,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
   },
-  scoreRing: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    borderWidth: 2,
-    justifyContent: 'center',
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.md,
   },
-  scoreCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2.5,
-  },
-  scoreText: {
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  textContainer: {
-    flex: 1,
-  },
-  title: {
+  label: {
     fontSize: FontSize.md,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
     marginBottom: 2,
   },
   subtitle: {
     fontSize: FontSize.xs,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  icon: {
-    fontSize: 24,
+  scorePill: {
+    borderRadius: BorderRadius.round,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minWidth: 56,
+    alignItems: 'center',
+  },
+  scoreNumber: {
+    fontSize: FontSize.xl,
+    fontWeight: '900',
+    color: '#fff',
+  },
+  track: {
+    height: 10,
+    borderRadius: BorderRadius.round,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  fill: {
+    height: '100%',
+    borderRadius: BorderRadius.round,
+    overflow: 'hidden',
+  },
+  scaleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  scaleText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
 });
 

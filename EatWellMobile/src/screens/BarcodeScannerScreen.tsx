@@ -4,6 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/colors';
@@ -18,18 +21,29 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [manualBarcode, setManualBarcode] = useState('');
 
   const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
     if (scanned) return;
     setScanned(true);
     
+    console.log(`[Scanner] Barkod algılandı: ${data} (${type})`);
+
     // @ts-ignore
     const { nextScreen, nextScreenParams } = ((route || {}).params || {});
     
     if (nextScreen) {
+      console.log(`[Scanner] ${nextScreen} ekranına yönlendiriliyor...`);
       navigation.replace(nextScreen, { barcode: data, ...nextScreenParams });
     } else {
+      console.log('[Scanner] Analysis ekranına yönlendiriliyor...');
       navigation.replace('Analysis', { barcode: data });
+    }
+  };
+
+  const handleManualSubmit = () => {
+    if (manualBarcode.trim()) {
+      handleBarcodeScanned({ type: 'manual', data: manualBarcode.trim() });
     }
   };
 
@@ -108,6 +122,24 @@ const BarcodeScannerScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.rescanText}>🔄 Tekrar Tara</Text>
             </TouchableOpacity>
           )}
+          <View style={styles.manualInputContainer}>
+            <TextInput
+              style={styles.manualInput}
+              placeholder="Barkodu elle girin..."
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              value={manualBarcode}
+              onChangeText={setManualBarcode}
+              keyboardType="numeric"
+              onSubmitEditing={handleManualSubmit}
+            />
+            <TouchableOpacity 
+              style={styles.manualSubmitBtn}
+              onPress={handleManualSubmit}
+            >
+              <Text style={styles.manualSubmitText}>Git</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
@@ -283,6 +315,34 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: '600',
   },
+  manualInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: BorderRadius.xl,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    width: '85%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    height: 50,
+  },
+  manualInput: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: FontSize.md,
+    fontWeight: '600',
+  },
+  manualSubmitBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.lg,
+  },
+  manualSubmitText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  }
 });
 
 export default BarcodeScannerScreen;
