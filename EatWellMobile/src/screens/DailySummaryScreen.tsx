@@ -80,7 +80,9 @@ const DailySummaryScreen: React.FC<Props> = ({ navigation }) => {
 
   /* Edit & Delete Logic */
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [newAmount, setNewAmount] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -152,31 +154,29 @@ const DailySummaryScreen: React.FC<Props> = ({ navigation }) => {
     return <LoadingSpinner message="Özet yükleniyor..." />;
   }
 
-
   const handleDeletePress = (item: any) => {
-    Alert.alert(
-      'Kaydı Sil',
-      `"${item.productName}" kaydını silmek istediğinize emin misiniz?`,
-      [
-        { text: 'İptal', style: 'cancel' },
-        { 
-          text: 'Sil', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              const deviceId = await getDeviceId();
-              await dailyLogService.deleteConsumption(item.id, deviceId);
-              fetchSummary(); // Refresh list
-            } catch (error) {
-              Alert.alert('Hata', 'Kayıt silinemedi.');
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
+    setItemToDelete(item);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    try {
+      setLoading(true);
+      setDeleteModalVisible(false);
+      const deviceId = await getDeviceId();
+      await dailyLogService.deleteConsumption(itemToDelete.id, deviceId);
+      setItemToDelete(null);
+      fetchSummary();
+    } catch (error) {
+      if (Platform.OS === 'web') {
+        window.alert('Kayıt silinemedi.');
+      } else {
+        Alert.alert('Hata', 'Kayıt silinemedi.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditPress = (item: any) => {
@@ -568,9 +568,6 @@ const DailySummaryScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             )}
 
-
-
-
             </ScrollView>
           </View>
         </View>
@@ -586,7 +583,7 @@ const DailySummaryScreen: React.FC<Props> = ({ navigation }) => {
             
             <View style={[styles.inputContainer, { backgroundColor: colors.backgroundLight, borderColor: colors.border }]}>
               <TextInput
-                style={[styles.input, { color: colors.textPrimary }]}
+                style={[styles.input, { color: colors.textPrimary, outlineStyle: 'none' } as any]}
                 value={newAmount}
                 onChangeText={setNewAmount}
                 keyboardType="numeric"
@@ -615,6 +612,35 @@ const DailySummaryScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       )}
 
+      {/* Delete Modal */}
+      {deleteModalVisible && itemToDelete && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.backgroundCard }]}>
+            <View style={{ marginBottom: 16, backgroundColor: Colors.accentRed + '15', padding: 16, borderRadius: 50 }}>
+              <Text style={{ fontSize: 32 }}>🗑️</Text>
+            </View>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 8 }]}>Kaydı Sil</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.textSecondary, marginBottom: 24, textAlign: 'center' }]}>
+              "{itemToDelete.productName}" kaydını silmek istediğinize emin misiniz?
+            </Text>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={[styles.modalBtn, { backgroundColor: colors.backgroundLight }]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalBtn, { backgroundColor: Colors.accentRed }]}
+                onPress={confirmDelete}
+              >
+                <Text style={[styles.modalBtnText, { color: '#fff' }]}>Sil</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
     </View>
   );
@@ -901,6 +927,7 @@ const styles = StyleSheet.create({
   },
 
   detailRow: {
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: Spacing.sm,
     marginBottom: Spacing.xs,

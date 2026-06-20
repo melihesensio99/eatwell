@@ -9,3 +9,4 @@ export { default as BarcodeScannerScreen } from './BarcodeScannerScreen';
 export { default as CalorieGoalScreen } from './CalorieGoalScreen';
 export { default as AllergenSettingsScreen } from './AllergenSettingsScreen';
 export { default as ChatScreen } from './ChatScreen';
+export { default as ImageScannerScreen } from './ImageScannerScreen';

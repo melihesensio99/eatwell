@@ -14,6 +14,7 @@ import {
   CalorieGoalScreen,
   AllergenSettingsScreen,
   ChatScreen,
+  ImageScannerScreen,
 } from './src/screens';
 import { ThemeProvider, useTheme } from './src/constants/ThemeContext';
 
@@ -65,6 +66,14 @@ function AppNavigator() {
             headerBackTitle: 'Geri',
             headerTransparent: true,
             headerTintColor: '#FFFFFF',
+          }}
+        />
+        <Stack.Screen
+          name="ImageScanner"
+          component={ImageScannerScreen}
+          options={{
+            title: 'Görsel Tara',
+            headerBackTitle: 'Geri',
           }}
         />
         <Stack.Screen

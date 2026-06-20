@@ -9,6 +9,7 @@ namespace Application.DTOs
 {
     public class ProductAnalysisDto
     {
+        public string? Code { get; set; }
         public string? ProductName { get; set; }
         [JsonProperty("image_front_url")]
         public string? ImageFrontUrl { get; set; } //ürünün ön yüzünün resmi
@@ -23,6 +24,8 @@ namespace Application.DTOs
         public string SaturatedFat { get; set; }
         public string Sugars { get; set; }
         public string EnergyKcal { get; set; }
+        public string Proteins { get; set; }
+        public string Carbohydrates { get; set; }
         public int Score { get; set; }
         public bool IsHealthy { get; set; }
         public string[]? AllergensHierarchy { get; set; }

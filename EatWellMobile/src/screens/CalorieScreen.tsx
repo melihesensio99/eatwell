@@ -48,8 +48,25 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    fetchCalorie();
-  }, [barcode]);
+    if (route.params?.manualData) {
+      setData(route.params.manualData);
+      setLoading(false);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      fetchCalorie();
+    }
+  }, [barcode, route.params?.manualData]);
 
   const fetchCalorie = async () => {
     try {
@@ -87,12 +104,11 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
       setAdding(true);
       const deviceId = await getDeviceId();
       await dailyLogService.addConsumption(deviceId, barcode, Number(amount), selectedDate);
-      Alert.alert('Başarılı ✅', 'Ürün günlüğe eklendi!', [
-        {
-          text: 'Tamam',
-          onPress: () => navigation.navigate('DailySummary'),
-        },
-      ]);
+      navigation.navigate({
+        name: 'DailySummary',
+        params: { showSuccessToast: true },
+        merge: true,
+      });
     } catch (err) {
       Alert.alert('Hata', 'Ürün eklenirken bir sorun oluştu.');
     } finally {
@@ -187,7 +203,7 @@ const CalorieScreen: React.FC<Props> = ({ route, navigation }) => {
 
             <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.background }]}>
               <TextInput
-                style={[styles.input, { color: colors.textPrimary }]}
+                style={[styles.input, { color: colors.textPrimary, outlineStyle: 'none' } as any]}
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
@@ -410,15 +426,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
+    position: 'relative',
   },
   input: {
     flex: 1,
     paddingVertical: Spacing.md,
+    paddingLeft: Spacing.md,
+    paddingRight: 60,
     fontSize: FontSize.xl,
     fontWeight: '700',
   },
   unitBadge: {
+    position: 'absolute',
+    right: Spacing.md,
     backgroundColor: Colors.primary + '15',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,

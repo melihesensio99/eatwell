@@ -216,10 +216,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  contentContainer: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-  },
+
   saveButton: {
     paddingVertical: 16,
     borderRadius: BorderRadius.round,

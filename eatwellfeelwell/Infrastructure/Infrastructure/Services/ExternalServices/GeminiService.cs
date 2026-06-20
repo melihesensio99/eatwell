@@ -75,5 +75,9 @@ namespace Infrastructure.Services.ExternalServices
 
             return reply;
         }
+        public Task<string> AnalyzeImageAsync(string systemPrompt, string base64Image)
+        {
+            throw new NotImplementedException("Gemini Vision API is not configured. We are using Mistral.");
+        }
     }
 }

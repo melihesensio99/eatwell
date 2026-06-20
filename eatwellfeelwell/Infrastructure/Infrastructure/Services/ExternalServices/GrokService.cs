@@ -71,5 +71,9 @@ namespace Infrastructure.Services.ExternalServices
                 return result.choices[0].message.content;
             }
         }
+        public Task<string> AnalyzeImageAsync(string systemPrompt, string base64Image)
+        {
+            throw new NotImplementedException("Grok Vision API is not configured. We are using Mistral.");
+        }
     }
 }

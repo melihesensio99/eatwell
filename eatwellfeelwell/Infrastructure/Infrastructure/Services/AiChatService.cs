@@ -76,7 +76,9 @@ namespace Infrastructure.Services
             {
                 foreach (var msg in request.History)
                 {
-                    messages.Add((msg.Role, msg.Content));
+                    string role = msg.Role.ToLower();
+                    if (role == "model") role = "assistant";
+                    messages.Add((role, msg.Content));
                 }
             }
 

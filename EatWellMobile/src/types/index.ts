@@ -17,7 +17,8 @@ export interface ProductAnalysis {
   fat: string;
   salt: string;
   saturatedFat: string;
-
+  proteins: string;
+  carbohydrates: string;
   sugars: string;
   score: number;
   isHealthy: boolean;

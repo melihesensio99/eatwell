@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.DTOs.ExternalDtos;
 using System;
 using System.Collections.Generic;
@@ -11,5 +11,6 @@ namespace Application.Abstracts.Services
     public interface IFoodAnalysisService
     {
         Task<ProductAnalysisDto> AnalyzeProduct(string barcode, string? deviceId = null);
+        Task<ProductAnalysisDto> AnalyzeImage(string base64Image, string? deviceId = null);
     }
 }

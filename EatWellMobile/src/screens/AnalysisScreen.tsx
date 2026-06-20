@@ -30,7 +30,7 @@ interface Props {
 
 const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
   const { colors } = useTheme();
-  const { barcode } = route.params;
+  const { barcode, analysisData, localImageUri } = route.params || {};
   const [data, setData] = useState<ProductAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +40,88 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
   const headerLineAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    fetchAnalysis();
-  }, [barcode]);
+    if (analysisData) {
+      setData(analysisData);
+      setLoading(false);
+      startAnimations();
+    } else if (barcode) {
+      fetchAnalysis();
+    } else {
+      setError('Veri bulunamadı.');
+      setLoading(false);
+    }
+  }, [barcode, analysisData]);
+
+  React.useLayoutEffect(() => {
+    if (data) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity
+            style={{ marginRight: 16, padding: 8, backgroundColor: Colors.accentOrange + '20', borderRadius: 20 }}
+            onPress={() => navigation.navigate('Calorie', { 
+              barcode: barcode || data.code || `AI_${Date.now()}`, 
+              productName: data.productName,
+              enableAdding: true,
+              manualData: !barcode ? {
+                productName: data.productName,
+                fat100g: parseFloat(data.fat || '0'),
+                proteins100g: parseFloat(data.proteins || '0'),
+                carbohydrates100g: parseFloat(data.carbohydrates || '0'),
+                sugars100g: parseFloat(data.sugars || '0'),
+                saturatedFat100g: parseFloat(data.saturatedFat || '0'),
+                salt100g: parseFloat(data.salt || '0'),
+                caloriePercentInfo: {
+                  energyKcal100g: parseFloat(data.energyKcal || '0'),
+                  fatPercent: 33,
+                  proteinPercent: 33,
+                  carbPercent: 34
+                }
+              } : undefined
+            })}
+          >
+            <Text style={{ fontSize: 20 }}>➕</Text>
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [navigation, data, barcode]);
+
+  const startAnimations = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 20,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(headerLineAnim, {
+        toValue: 1,
+        duration: 1000,
+        delay: 400,
+        useNativeDriver: false,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -8,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
 
   const fetchAnalysis = async () => {
     console.log(`[Analysis] ${barcode} barkodu için analiz başlatılıyor...`);
@@ -54,40 +134,7 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
       console.log('[Analysis] Veri başarıyla alındı:', result.productName);
       setData(result);
       
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 20,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headerLineAnim, {
-          toValue: 1,
-          duration: 1000,
-          delay: 400,
-          useNativeDriver: false,
-        }),
-      ]).start();
-
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(floatAnim, {
-            toValue: -8,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(floatAnim, {
-            toValue: 0,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
+      startAnimations();
     } catch (err: any) {
       setError(
         err.response?.status === 404
@@ -150,10 +197,10 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
           {/* Hero Section - Ürün Bilgisi */}
           <View style={[styles.heroCard, { backgroundColor: colors.backgroundCard }]}>
             <Animated.View style={[styles.imageSection, { transform: [{ translateY: floatAnim }] }]}>
-              {data.imageFrontUrl ? (
+              {(data.imageFrontUrl || localImageUri) ? (
                 <View style={styles.imageGlow}>
                   <Image
-                    source={{ uri: data.imageFrontUrl }}
+                    source={{ uri: data.imageFrontUrl || localImageUri }}
                     style={styles.productImage}
                     resizeMode="contain"
                   />
@@ -279,7 +326,25 @@ const AnalysisScreen: React.FC<Props> = ({ route, navigation }) => {
           {/* Action Button - Premium CTA */}
           <TouchableOpacity
             style={[styles.ctaButton, { backgroundColor: Colors.accentOrange }]}
-            onPress={() => navigation.navigate('Calorie', { barcode, productName: data.productName })}
+            onPress={() => navigation.navigate('Calorie', { 
+              barcode: barcode || data.code || `AI_${Date.now()}`, 
+              productName: data.productName,
+              manualData: !barcode ? {
+                productName: data.productName,
+                fat100g: parseFloat(data.fat || '0'),
+                proteins100g: parseFloat(data.proteins || '0'),
+                carbohydrates100g: parseFloat(data.carbohydrates || '0'),
+                sugars100g: parseFloat(data.sugars || '0'),
+                saturatedFat100g: parseFloat(data.saturatedFat || '0'),
+                salt100g: parseFloat(data.salt || '0'),
+                caloriePercentInfo: {
+                  energyKcal100g: parseFloat(data.energyKcal || '0'),
+                  fatPercent: 33,
+                  proteinPercent: 33,
+                  carbPercent: 34
+                }
+              } : undefined
+            })}
             activeOpacity={0.9}
           >
             <LinearGradient
@@ -523,11 +588,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: BorderRadius.round,
+    maxWidth: '100%',
   },
   additivePillText: {
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
+    flexWrap: 'wrap',
   },
   countBadge: {
     paddingHorizontal: 10,
@@ -711,6 +778,7 @@ const AiAnalysisCard: React.FC<{ text: string; navigation: any; productName: str
 
   // Metni maddelere ayır ve temizle
   const points = displayedText
+    .replace(/\\n/g, '\n')
     .split(/[•\n]/)
     .map((p) => cleanMarkdown(p))
     .filter((p) => p.length > 0);

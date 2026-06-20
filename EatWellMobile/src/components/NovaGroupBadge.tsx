@@ -44,10 +44,8 @@ const NovaGroupBadge: React.FC<Props> = ({ group }) => {
   const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
-  if (!group) return null;
-
-  const cfg = novaConfig[group] ?? { colors: ['#6b7280', '#9ca3af'] as [string,string], label: 'Bilinmiyor', icon: '❓', description: '' };
-  const groupNum = parseInt(group);
+  const cfg = (group && novaConfig[group]) ? novaConfig[group] : { colors: ['#9ca3af', '#d1d5db'] as [string,string], label: 'Bilinmiyor', icon: '❓', description: 'Bu ürünün NOVA işlenmişlik grubu bilinmiyor veya hesaplanamadı.' };
+  const groupNum = group ? parseInt(group) : 0;
 
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -88,7 +86,7 @@ const NovaGroupBadge: React.FC<Props> = ({ group }) => {
       <View style={styles.labelRow}>
         <LinearGradient colors={cfg.colors} style={styles.iconPill}>
           <Text style={styles.icon}>{cfg.icon}</Text>
-          <Text style={styles.pillText}>{group}/4 — {cfg.label}</Text>
+          <Text style={styles.pillText}>{group || '?'}/4 — {cfg.label}</Text>
         </LinearGradient>
       </View>
 

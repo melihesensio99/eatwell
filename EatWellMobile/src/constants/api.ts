@@ -3,7 +3,7 @@
 import { Platform } from 'react-native';
 
 export const API_CONFIG = {
-  BASE_URL: Platform.OS === 'web' ? 'http://localhost:5126' : 'http://192.168.1.100:5126',
+  BASE_URL: Platform.OS === 'web' ? 'http://localhost:5126' : 'http://172.20.10.6:5126',
   
   ENDPOINTS: {
     ANALYSIS: '/api/FoodAnalysis',

@@ -35,6 +35,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     useRef(new Animated.Value(0)).current,
     useRef(new Animated.Value(0)).current,
     useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
   ];
 
   useEffect(() => {
@@ -120,6 +121,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       onPress: () => navigation.navigate('BarcodeScanner'),
     },
     {
+      icon: '🖼️',
+      title: 'Görsel Tara',
+      subtitle: 'Yapay Zeka ile',
+      gradient: [colors.accentPink || '#FF2D55'],
+      borderColor: (colors.accentPink || '#FF2D55') + '40',
+      glowColor: colors.glowPurple || 'rgba(255,45,85,0.25)',
+      onPress: () => navigation.navigate('ImageScanner'),
+    },
+    {
       icon: '📅',
       title: 'Günlük Özet',
       subtitle: 'Bugünün takibi',
@@ -127,15 +137,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       borderColor: colors.accentBlue + '40',
       glowColor: colors.glowBlue || 'rgba(56,189,248,0.25)',
       onPress: () => navigation.navigate('DailySummary'),
-    },
-    {
-      icon: '🥜',
-      title: 'Alerjenler',
-      subtitle: 'Alerjen Seçimi',
-      gradient: [colors.accentPurple],
-      borderColor: colors.accentPurple + '40',
-      glowColor: colors.glowPurple || 'rgba(192,132,252,0.25)',
-      onPress: () => navigation.navigate('AllergenSettings'),
     },
   ];
 
@@ -152,12 +153,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <Animated.View style={[styles.bgOrb, styles.bgOrb2, { opacity: glowAnim }]} />
       </View>
 
-      {/* AI Asistan — Sol üst köşe */}
+      {/* Alerjenler — Sol üst köşe */}
       <TouchableOpacity 
-        style={[styles.aiButton, { backgroundColor: colors.backgroundCard, borderColor: colors.accentCyan + '40' }]} 
-        onPress={() => navigation.navigate('Chat')}
+        style={[styles.aiButton, { backgroundColor: colors.backgroundCard, borderColor: colors.accentPurple + '40' }]} 
+        onPress={() => navigation.navigate('AllergenSettings')}
       >
-        <Text style={styles.aiButtonText}>🤖</Text>
+        <Text style={styles.aiButtonText}>🥜</Text>
       </TouchableOpacity>
       {/* Tema Değiştirme */}
       <TouchableOpacity 
@@ -194,59 +195,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Ürün arama alanı */}
-        <View style={styles.inputSection}>
-          <View style={[styles.inputWrapper, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-            <TextInput
-              style={[styles.input, { color: colors.textPrimary }]}
-              placeholder="Ürün adı girin..."
-              placeholderTextColor={colors.textMuted}
-              value={searchText}
-              onChangeText={handleTextChange}
-              onSubmitEditing={executeSearch}
-              returnKeyType="search"
-            />
-            {isSearching ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <TouchableOpacity onPress={executeSearch}>
-                <Text style={[styles.inputIcon, { marginRight: 0, marginLeft: Spacing.sm }]}>🔍</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
-          {searchResults.length > 0 && (
-            <View style={[styles.searchDropdown, { backgroundColor: colors.backgroundCard, borderColor: colors.border, maxHeight: 220 }]}>
-              <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-              {searchResults.map((item, index) => (
-                <TouchableOpacity
-                  key={item.code || index}
-                  style={[styles.searchItem, index < searchResults.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.divider }]}
-                  onPress={() => handleSelectProduct(item.code)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.searchItemInfo}>
-                    <Text style={[styles.searchItemName, { color: colors.textPrimary }]} numberOfLines={1}>
-                      {item.productName}
-                    </Text>
-                    <Text style={[styles.searchItemBrand, { color: colors.textMuted }]} numberOfLines={1}>
-                      {item.brands || 'Marka bilinmiyor'}
-                      {item.caloriesPer100g ? ` · ${Math.round(item.caloriesPer100g)} kcal/100g` : ''}
-                    </Text>
-                  </View>
-                  {item.nutritionGrade && (
-                    <View style={[styles.searchItemGrade, { backgroundColor: colors.primary + '20' }]}>
-                      <Text style={[styles.searchItemGradeText, { color: colors.primary }]}>
-                        {item.nutritionGrade.toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-              </ScrollView>
-            </View>
-          )}
-        </View>
 
         {/* Aksiyon Butonları — 3'lü grid */}
         <View style={styles.actionGrid}>

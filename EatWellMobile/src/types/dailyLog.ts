@@ -6,6 +6,7 @@ export interface AddConsumptionRequest {
 }
 
 export interface ConsumedItemDto {
+  id: number;
   code: string;
   productName?: string;
   amount: number;
