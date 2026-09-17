@@ -42,6 +42,16 @@ public sealed class MistralNutritionGoalProviderTests
     }
 
     [Fact]
+    public async Task Provider_throws_when_structured_content_is_invalid_json()
+    {
+        var provider = CreateProvider(
+            "{ \"choices\": [{ \"message\": { \"content\": \"not-json\" } }] }");
+
+        await Assert.ThrowsAsync<EatWell.Application.Common.Exceptions.ExternalServiceException>(() =>
+            provider.CalculateAsync(CreateInput()));
+    }
+
+    [Fact]
     public async Task Provider_throws_external_service_exception_when_mistral_fails()
     {
         var provider = CreateProvider("{\"error\":{\"message\":\"failed\"}}", HttpStatusCode.BadGateway);

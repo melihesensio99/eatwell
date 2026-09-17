@@ -1,4 +1,5 @@
 using FluentValidation;
+using EatWell.Application.Common.Foods;
 
 namespace EatWell.Application.Features.Recipes.Queries.GenerateRecipe;
 
@@ -25,13 +26,16 @@ public sealed class GenerateRecipeQueryValidator : AbstractValidator<GenerateRec
             .MaximumLength(100)
             .When(x => x.DietaryPreference is not null);
 
-        RuleFor(x => x.ImageBase64)
-            .MaximumLength(7_000_000)
-            .When(x => x.ImageBase64 is not null);
+        RuleFor(x => x).Custom((query, context) =>
+        {
+            if (string.IsNullOrWhiteSpace(query.ImageBase64))
+                return;
 
-        RuleFor(x => x.MimeType)
-            .Must(type => type is "image/jpeg" or "image/png" or "image/webp")
-            .When(x => !string.IsNullOrWhiteSpace(x.ImageBase64))
-            .WithMessage("Sadece jpeg, png veya webp görseller kabul edilir.");
+            if (!ImagePayloadValidator.TryDecode(
+                    query.ImageBase64, query.MimeType, out _, out var error))
+            {
+                context.AddFailure("ImageBase64", error);
+            }
+        });
     }
 }

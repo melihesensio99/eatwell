@@ -1,8 +1,7 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EatWell.Application.Common.Foods;
-using EatWell.Application.Common.Exceptions;
+using EatWell.Infrastructure.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
@@ -36,19 +35,11 @@ public sealed class OpenFoodFactsProvider : IFoodProvider
             return cached;
 
         var url = $"api/v2/search?search_terms={Uri.EscapeDataString(query)}&page_size=20&fields={Fields}";
-        SearchResponse? response;
-        try
-        {
-            response = await _httpClient.GetFromJsonAsync<SearchResponse>(url, cancellationToken);
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new ExternalServiceException("OpenFoodFacts", exception);
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new ExternalServiceException("OpenFoodFacts", exception);
-        }
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        using var responseMessage = await ExternalHttpClient.SendAsync(
+            _httpClient, request, "OpenFoodFacts", cancellationToken);
+        var response = await ExternalHttpClient.ReadJsonAsync<SearchResponse>(
+            responseMessage, "OpenFoodFacts", cancellationToken);
 
         var result = response?.Products?
             .Where(product => !string.IsNullOrWhiteSpace(product.ProductName))
@@ -68,21 +59,13 @@ public sealed class OpenFoodFactsProvider : IFoodProvider
         if (cached is not null)
             return cached;
 
-        ProductResponse? response;
-        try
-        {
-            response = await _httpClient.GetFromJsonAsync<ProductResponse>(
-                $"api/v2/product/{Uri.EscapeDataString(barcode)}.json?fields={Fields}",
-                cancellationToken);
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new ExternalServiceException("OpenFoodFacts", exception);
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new ExternalServiceException("OpenFoodFacts", exception);
-        }
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"api/v2/product/{Uri.EscapeDataString(barcode)}.json?fields={Fields}");
+        using var responseMessage = await ExternalHttpClient.SendAsync(
+            _httpClient, request, "OpenFoodFacts", cancellationToken);
+        var response = await ExternalHttpClient.ReadJsonAsync<ProductResponse>(
+            responseMessage, "OpenFoodFacts", cancellationToken);
 
         var result = response?.Status == 1 && response.Product is not null
             ? ToDetails(response.Product)

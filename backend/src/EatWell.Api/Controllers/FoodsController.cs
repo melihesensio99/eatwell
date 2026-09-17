@@ -52,6 +52,7 @@ public sealed class FoodsController(ISender sender) : ControllerBase
     [HttpPost("analyze-image")]
     [Authorize]
     [EnableRateLimiting("ai-expensive")]
+    [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> AnalyzeImage(
         [FromBody] AnalyzeFoodImageQuery query,
         CancellationToken cancellationToken)

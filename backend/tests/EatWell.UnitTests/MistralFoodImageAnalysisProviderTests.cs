@@ -93,8 +93,16 @@ public sealed class AnalyzeFoodImageQueryValidatorTests
     [InlineData("image/webp")]
     public async Task Validator_accepts_supported_image_types(string mimeType)
     {
+        var base64 = mimeType switch
+        {
+            "image/jpeg" => "/9j/4A==",
+            "image/png" => "iVBORw0KGgo=",
+            "image/webp" => "UklGRgAAAABXRUJQ",
+            _ => throw new InvalidOperationException()
+        };
+
         var result = await _validator.ValidateAsync(
-            new AnalyzeFoodImageQuery("AAAA", mimeType));
+            new AnalyzeFoodImageQuery(base64, mimeType));
 
         Assert.True(result.IsValid);
     }
@@ -104,6 +112,24 @@ public sealed class AnalyzeFoodImageQueryValidatorTests
     {
         var result = await _validator.ValidateAsync(
             new AnalyzeFoodImageQuery("AAAA", "application/pdf"));
+
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public async Task Validator_rejects_payload_when_mime_type_does_not_match_content()
+    {
+        var result = await _validator.ValidateAsync(
+            new AnalyzeFoodImageQuery("iVBORw0KGgo=", "image/jpeg"));
+
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public async Task Validator_rejects_invalid_base64_payload()
+    {
+        var result = await _validator.ValidateAsync(
+            new AnalyzeFoodImageQuery("not-base64", "image/png"));
 
         Assert.False(result.IsValid);
     }

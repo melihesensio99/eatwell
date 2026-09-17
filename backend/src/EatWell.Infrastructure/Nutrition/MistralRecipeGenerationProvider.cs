@@ -3,9 +3,8 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using EatWell.Application.Common.Exceptions;
 using EatWell.Application.Common.Recipes;
+using EatWell.Infrastructure.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -64,40 +63,16 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
             }
         });
 
-        HttpResponseMessage response;
-        try
-        {
-            response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new ExternalServiceException("Mistral", exception);
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new ExternalServiceException("Mistral", exception);
-        }
+        using var response = await ExternalHttpClient.SendAsync(
+            _httpClient, request, "Mistral", cancellationToken);
 
-        using (response)
-        {
-            var completion = await response.Content.ReadFromJsonAsync<MistralCompletionResponse>(cancellationToken);
-            var content = completion?.Choices?.FirstOrDefault()?.Message?.Content;
-            if (string.IsNullOrWhiteSpace(content))
-                throw new ExternalServiceException("Mistral", new InvalidOperationException("Boş tarif cevabı."));
+        var result = await ExternalHttpClient.ReadStructuredChatResponseAsync<GeneratedRecipeDto>(
+            response, "Mistral", cancellationToken);
 
-            var result = JsonSerializer.Deserialize<GeneratedRecipeDto>(
-                content,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            if (result is null)
-                throw new ExternalServiceException(
-                "Mistral", new InvalidOperationException("Tarif cevabı parse edilemedi."));
+        if (input.ImageBase64 is null)
+            await TrySetCacheAsync(cacheKey, result, cancellationToken);
 
-            if (input.ImageBase64 is null)
-                await TrySetCacheAsync(cacheKey, result, cancellationToken);
-
-            return result;
-        }
+        return result;
     }
 
     private async Task<GeneratedRecipeDto?> TryGetCacheAsync(
@@ -262,18 +237,4 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
         }
     };
 
-    private sealed class MistralCompletionResponse
-    {
-        [JsonPropertyName("choices")] public List<Choice>? Choices { get; init; }
-    }
-
-    private sealed class Choice
-    {
-        [JsonPropertyName("message")] public Message? Message { get; init; }
-    }
-
-    private sealed class Message
-    {
-        [JsonPropertyName("content")] public string? Content { get; init; }
-    }
 }

@@ -13,6 +13,7 @@ public sealed class RecipesController(ISender sender) : ControllerBase
 {
     [HttpPost("generate")]
     [EnableRateLimiting("ai-expensive")]
+    [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> Generate(
         [FromBody] GenerateRecipeQuery query,
         CancellationToken cancellationToken)

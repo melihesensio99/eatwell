@@ -1,9 +1,8 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using EatWell.Application.Common.Nutrition;
-using EatWell.Application.Common.Exceptions;
+using EatWell.Infrastructure.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace EatWell.Infrastructure.Nutrition;
@@ -48,46 +47,11 @@ public sealed class MistralNutritionGoalProvider : INutritionGoalProvider
             }
         });
 
-        HttpResponseMessage response;
-        try
-        {
-            response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new ExternalServiceException("Mistral", exception);
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new ExternalServiceException("Mistral", exception);
-        }
+        using var response = await ExternalHttpClient.SendAsync(
+            _httpClient, request, "Mistral", cancellationToken);
 
-        using (response)
-        {
-            return await ParseResponseAsync(response, cancellationToken);
-        }
-    }
-
-    private static async Task<NutritionGoalCalculationDto> ParseResponseAsync(
-        HttpResponseMessage response,
-        CancellationToken cancellationToken)
-    {
-        var completion = await response.Content.ReadFromJsonAsync<MistralCompletionResponse>(
-            cancellationToken);
-        var content = completion?.Choices?.FirstOrDefault()?.Message?.Content;
-
-        if (string.IsNullOrWhiteSpace(content))
-            throw new ExternalServiceException(
-                "Mistral",
-                new InvalidOperationException("Boş structured response."));
-
-        var result = JsonSerializer.Deserialize<NutritionGoalCalculationDto>(
-            content,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        return result ?? throw new ExternalServiceException(
-            "Mistral",
-            new InvalidOperationException("Structured response parse edilemedi."));
+        return await ExternalHttpClient.ReadStructuredChatResponseAsync<NutritionGoalCalculationDto>(
+            response, "Mistral", cancellationToken);
     }
 
     private static string BuildUserPrompt(NutritionGoalInputDto input)
@@ -134,18 +98,4 @@ public sealed class MistralNutritionGoalProvider : INutritionGoalProvider
         }
     };
 
-    private sealed class MistralCompletionResponse
-    {
-        [JsonPropertyName("choices")] public List<Choice>? Choices { get; init; }
-    }
-
-    private sealed class Choice
-    {
-        [JsonPropertyName("message")] public Message? Message { get; init; }
-    }
-
-    private sealed class Message
-    {
-        [JsonPropertyName("content")] public string? Content { get; init; }
-    }
 }

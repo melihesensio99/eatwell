@@ -1,9 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using EatWell.Application.Common.Exceptions;
 using EatWell.Application.Common.Foods;
+using EatWell.Infrastructure.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace EatWell.Infrastructure.Nutrition;
@@ -53,36 +51,11 @@ public sealed class MistralFoodImageAnalysisProvider : IFoodImageAnalysisProvide
             }
         });
 
-        HttpResponseMessage response;
-        try
-        {
-            response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new ExternalServiceException("Mistral Vision", exception);
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new ExternalServiceException("Mistral Vision", exception);
-        }
+        using var response = await ExternalHttpClient.SendAsync(
+            _httpClient, request, "Mistral Vision", cancellationToken);
 
-        using (response)
-        {
-            var completion = await response.Content.ReadFromJsonAsync<MistralCompletionResponse>(
-                cancellationToken);
-            var content = completion?.Choices?.FirstOrDefault()?.Message?.Content;
-            if (string.IsNullOrWhiteSpace(content))
-                throw new ExternalServiceException(
-                    "Mistral Vision", new InvalidOperationException("Boş görsel analiz cevabı."));
-
-            var result = JsonSerializer.Deserialize<FoodImageAnalysisDto>(
-                content,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return result ?? throw new ExternalServiceException(
-                "Mistral Vision", new InvalidOperationException("Görsel analiz cevabı parse edilemedi."));
-        }
+        return await ExternalHttpClient.ReadStructuredChatResponseAsync<FoodImageAnalysisDto>(
+            response, "Mistral Vision", cancellationToken);
     }
 
     private const string SystemPrompt = """
@@ -136,18 +109,4 @@ public sealed class MistralFoodImageAnalysisProvider : IFoodImageAnalysisProvide
         }
     };
 
-    private sealed class MistralCompletionResponse
-    {
-        [JsonPropertyName("choices")] public List<Choice>? Choices { get; init; }
-    }
-
-    private sealed class Choice
-    {
-        [JsonPropertyName("message")] public Message? Message { get; init; }
-    }
-
-    private sealed class Message
-    {
-        [JsonPropertyName("content")] public string? Content { get; init; }
-    }
 }
