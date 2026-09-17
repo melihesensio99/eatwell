@@ -1,0 +1,6 @@
+@EatWell.Api_HostAddress = http://localhost:5248
+
+GET {{EatWell.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

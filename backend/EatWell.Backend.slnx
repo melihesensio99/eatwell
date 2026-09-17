@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EatWell.Api/EatWell.Api.csproj" />
+    <Project Path="src/EatWell.Application/EatWell.Application.csproj" />
+    <Project Path="src/EatWell.Domain/EatWell.Domain.csproj" />
+    <Project Path="src/EatWell.Infrastructure/EatWell.Infrastructure.csproj" />
+    <Project Path="src/EatWell.Persistence/EatWell.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EatWell.IntegrationTests/EatWell.IntegrationTests.csproj" />
+    <Project Path="tests/EatWell.UnitTests/EatWell.UnitTests.csproj" />
+  </Folder>
+</Solution>
