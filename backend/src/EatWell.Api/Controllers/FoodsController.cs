@@ -7,6 +7,7 @@ using EatWell.Application.Features.Foods.Queries.GetSavedFoods;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EatWell.Api.Controllers;
 
@@ -50,6 +51,7 @@ public sealed class FoodsController(ISender sender) : ControllerBase
 
     [HttpPost("analyze-image")]
     [Authorize]
+    [EnableRateLimiting("ai-expensive")]
     public async Task<IActionResult> AnalyzeImage(
         [FromBody] AnalyzeFoodImageQuery query,
         CancellationToken cancellationToken)
@@ -58,6 +60,7 @@ public sealed class FoodsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("search")]
+    [EnableRateLimiting("external-food-search")]
     public async Task<IActionResult> Search(
         [FromQuery] string query,
         CancellationToken cancellationToken)
@@ -70,6 +73,7 @@ public sealed class FoodsController(ISender sender) : ControllerBase
 
     [HttpGet("barcode/{barcode}")]
     [Authorize]
+    [EnableRateLimiting("external-food-barcode")]
     public async Task<IActionResult> GetByBarcode(
         string barcode,
         CancellationToken cancellationToken)

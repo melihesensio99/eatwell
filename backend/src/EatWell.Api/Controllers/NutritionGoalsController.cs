@@ -4,6 +4,7 @@ using EatWell.Application.Features.NutritionGoals.Queries.GetMy;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EatWell.Api.Controllers;
 
@@ -29,6 +30,7 @@ public sealed class NutritionGoalsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("calculate-with-ai")]
+    [EnableRateLimiting("ai-expensive")]
     public async Task<IActionResult> CalculateWithAi(
         [FromBody] CalculateNutritionGoalWithAiCommand command,
         CancellationToken cancellationToken)
