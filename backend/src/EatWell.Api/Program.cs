@@ -4,6 +4,7 @@ using EatWell.Api.Authentication;
 using EatWell.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using EatWell.Api.Errors;
+using EatWell.Api.Middleware;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 
@@ -83,6 +84,7 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseMiddleware<AiConcurrencyMiddleware>();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
