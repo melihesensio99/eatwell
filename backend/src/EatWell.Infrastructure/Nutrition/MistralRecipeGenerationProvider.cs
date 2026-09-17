@@ -1,22 +1,34 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EatWell.Application.Common.Exceptions;
 using EatWell.Application.Common.Recipes;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace EatWell.Infrastructure.Nutrition;
 
 public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
 {
     private readonly HttpClient _httpClient;
+    private readonly IDistributedCache _cache;
+    private readonly ILogger<MistralRecipeGenerationProvider> _logger;
     private readonly string _apiKey;
     private readonly string _model;
 
-    public MistralRecipeGenerationProvider(HttpClient httpClient, IConfiguration configuration)
+    public MistralRecipeGenerationProvider(
+        HttpClient httpClient,
+        IConfiguration configuration,
+        IDistributedCache cache,
+        ILogger<MistralRecipeGenerationProvider> logger)
     {
         _httpClient = httpClient;
+        _cache = cache;
+        _logger = logger;
         _apiKey = configuration["Mistral:ApiKey"]
             ?? throw new InvalidOperationException("Mistral:ApiKey configuration is missing.");
         _model = configuration["Mistral:Model"] ?? "mistral-large-latest";
@@ -26,6 +38,14 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
         RecipeGenerationInputDto input,
         CancellationToken cancellationToken = default)
     {
+        var cacheKey = $"recipes:generate:{CreateCacheHash(input)}";
+        if (input.ImageBase64 is null)
+        {
+            var cached = await TryGetCacheAsync(cacheKey, cancellationToken);
+            if (cached is not null)
+                return cached;
+        }
+
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
         request.Content = JsonContent.Create(new
@@ -69,9 +89,67 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
             var result = JsonSerializer.Deserialize<GeneratedRecipeDto>(
                 content,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return result ?? throw new ExternalServiceException(
+            if (result is null)
+                throw new ExternalServiceException(
                 "Mistral", new InvalidOperationException("Tarif cevabı parse edilemedi."));
+
+            if (input.ImageBase64 is null)
+                await TrySetCacheAsync(cacheKey, result, cancellationToken);
+
+            return result;
         }
+    }
+
+    private async Task<GeneratedRecipeDto?> TryGetCacheAsync(
+        string key,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var bytes = await _cache.GetAsync(key, cancellationToken);
+            return bytes is null
+                ? null
+                : JsonSerializer.Deserialize<GeneratedRecipeDto>(bytes);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(exception, "Redis tarif cache okunamadı. Key: {CacheKey}", key);
+            return null;
+        }
+    }
+
+    private async Task TrySetCacheAsync(
+        string key,
+        GeneratedRecipeDto value,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _cache.SetAsync(
+                key,
+                JsonSerializer.SerializeToUtf8Bytes(value),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                },
+                cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(exception, "Redis tarif cache yazılamadı. Key: {CacheKey}", key);
+        }
+    }
+
+    private static string CreateCacheHash(RecipeGenerationInputDto input)
+    {
+        var normalized = JsonSerializer.Serialize(new
+        {
+            ingredients = input.Ingredients.Select(x => x.Trim().ToLowerInvariant()).OrderBy(x => x),
+            input.Servings,
+            dietaryPreference = input.DietaryPreference?.Trim().ToLowerInvariant()
+        });
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static object BuildUserMessage(RecipeGenerationInputDto input)

@@ -11,5 +11,15 @@ services:
     volumes:
       - eatwell_backend_postgres_data:/var/lib/postgresql/data
 
+  eatwell-redis:
+    image: redis:7-alpine
+    container_name: eatwell-backend-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - eatwell_backend_redis_data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   eatwell_backend_postgres_data:
+  eatwell_backend_redis_data:

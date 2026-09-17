@@ -5,14 +5,22 @@ using EatWell.Infrastructure.Foods;
 using EatWell.Application.Common.Nutrition;
 using EatWell.Application.Common.Recipes;
 using EatWell.Infrastructure.Nutrition;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EatWell.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+            options.InstanceName = "eatwell:";
+        });
         services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
         services.AddHttpClient<IFoodProvider, OpenFoodFactsProvider>(client =>
         {
