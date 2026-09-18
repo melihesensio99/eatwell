@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using EatWell.Api.Errors;
 using EatWell.Api.Middleware;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,12 +38,17 @@ builder.Services.AddRateLimiter(options =>
                 Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds)).ToString());
         }
 
-        await context.HttpContext.Response.WriteAsJsonAsync(new
+        context.HttpContext.Response.ContentType = "application/problem+json";
+        var problem = new ProblemDetails
         {
-            title = "Rate limit exceeded.",
-            status = StatusCodes.Status429TooManyRequests,
-            detail = "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin."
-        }, cancellationToken);
+            Type = "about:blank",
+            Title = "Rate limit exceeded.",
+            Status = StatusCodes.Status429TooManyRequests,
+            Detail = "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
+            Instance = context.HttpContext.Request.Path
+        };
+        problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+        await context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
     };
 
     options.AddPolicy("external-food-search", httpContext =>

@@ -1,0 +1,3 @@
+import { apiClient } from '../../../api/client';
+export interface UserProfileDto { readonly userId?: string; readonly displayName?: string | null; readonly gender?: string | null; readonly heightCm?: number | null; readonly weightKg?: number | null; readonly birthDate?: string | null; readonly updatedAt?: string; }
+export const profileService = { get: async () => (await apiClient.get<UserProfileDto>('/api/profile')).data, update: async (profile: UserProfileDto) => (await apiClient.put<UserProfileDto>('/api/profile', profile)).data, getAllergens: async () => (await apiClient.get<string[]>('/api/profile/allergens')).data, setAllergens: async (allergens: string[]) => (await apiClient.put('/api/profile/allergens', { allergens })).data };

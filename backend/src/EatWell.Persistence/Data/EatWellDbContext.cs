@@ -1,6 +1,7 @@
 using EatWell.Domain.DailyLogs;
 using EatWell.Domain.Users;
 using EatWell.Domain.NutritionGoals;
+using EatWell.Domain.Recipes;
 using Microsoft.EntityFrameworkCore;
 
 namespace EatWell.Persistence.Data;
@@ -16,6 +17,7 @@ public sealed class EatWellDbContext : DbContext
     public DbSet<DailyLog> DailyLogs => Set<DailyLog>();
     public DbSet<DailyLogItem> DailyLogItems => Set<DailyLogItem>();
     public DbSet<NutritionGoal> NutritionGoals => Set<NutritionGoal>();
+    public DbSet<SavedRecipe> SavedRecipes => Set<SavedRecipe>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +57,7 @@ public sealed class EatWellDbContext : DbContext
         modelBuilder.Entity<DailyLog>(entity =>
         {
             entity.HasKey(log => log.Id);
+            entity.Property(log => log.Id).ValueGeneratedNever();
             entity.Property(log => log.UserId).HasMaxLength(128).IsRequired();
             entity.Property(log => log.LogDate).IsRequired();
             entity.Property(log => log.WaterConsumedMilliliters).HasPrecision(10, 2);
@@ -68,6 +71,7 @@ public sealed class EatWellDbContext : DbContext
         modelBuilder.Entity<DailyLogItem>(entity =>
         {
             entity.HasKey(item => item.Id);
+            entity.Property(item => item.Id).ValueGeneratedNever();
             entity.Property(item => item.FoodExternalId).HasMaxLength(128).IsRequired();
             entity.Property(item => item.FoodName).HasMaxLength(300).IsRequired();
             entity.Property(item => item.Brand).HasMaxLength(200);
@@ -89,6 +93,19 @@ public sealed class EatWellDbContext : DbContext
                 .WithOne()
                 .HasForeignKey<NutritionGoal>(goal => goal.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SavedRecipe>(entity =>
+        {
+            entity.HasKey(recipe => recipe.Id);
+            entity.Property(recipe => recipe.UserId).HasMaxLength(128).IsRequired();
+            entity.Property(recipe => recipe.RecipeName).HasMaxLength(300).IsRequired();
+            entity.Property(recipe => recipe.Description).HasMaxLength(4000);
+            entity.Property(recipe => recipe.IngredientsJson).IsRequired();
+            entity.Property(recipe => recipe.StepsJson).IsRequired();
+            entity.Property(recipe => recipe.YoutubeSearchUrl).HasMaxLength(1000);
+            entity.HasIndex(recipe => new { recipe.UserId, recipe.CreatedAt });
+            entity.HasOne<UserProfile>().WithMany().HasForeignKey(recipe => recipe.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

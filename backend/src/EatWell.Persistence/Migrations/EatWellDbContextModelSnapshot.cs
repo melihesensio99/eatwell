@@ -137,6 +137,71 @@ namespace EatWell.Persistence.Migrations
                     b.ToTable("NutritionGoals");
                 });
 
+            modelBuilder.Entity("EatWell.Domain.Recipes.SavedRecipe", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("CaloriesPerServing")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("CarbohydratesGramsPerServing")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("CookingMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<decimal?>("FatGramsPerServing")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("IngredientsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PreparationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("ProteinGramsPerServing")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("RecipeName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("Servings")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StepsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("YoutubeSearchUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("SavedRecipes");
+                });
+
             modelBuilder.Entity("EatWell.Domain.Users.FavoriteFood", b =>
                 {
                     b.Property<string>("UserId")
@@ -257,6 +322,15 @@ namespace EatWell.Persistence.Migrations
                     b.HasOne("EatWell.Domain.Users.UserProfile", null)
                         .WithOne()
                         .HasForeignKey("EatWell.Domain.NutritionGoals.NutritionGoal", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EatWell.Domain.Recipes.SavedRecipe", b =>
+                {
+                    b.HasOne("EatWell.Domain.Users.UserProfile", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -125,8 +125,11 @@ public sealed class OpenFoodFactsProvider : IFoodProvider
         GetName(product),
         product.Brands,
         product.Code,
-        product.Nutriments?.EnergyKcal100g,
-        product.ImageUrl,
+          product.Nutriments?.EnergyKcal100g,
+          product.Nutriments?.Proteins100g,
+          product.Nutriments?.Carbohydrates100g,
+          product.Nutriments?.Fat100g,
+          product.ImageUrl,
         product.NutriScore,
         product.NovaGroup);
 

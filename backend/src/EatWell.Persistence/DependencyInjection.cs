@@ -1,4 +1,5 @@
 using EatWell.Application.Common.Persistence;
+using EatWell.Application.Common.Recipes;
 using EatWell.Persistence.Data;
 using EatWell.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<INutritionGoalRepository, NutritionGoalRepository>();
         services.AddScoped<IUserAllergenRepository, UserAllergenRepository>();
         services.AddScoped<IFavoriteFoodRepository, FavoriteFoodRepository>();
+        services.AddScoped<ISavedRecipeRepository, SavedRecipeRepository>();
         return services;
     }
 }

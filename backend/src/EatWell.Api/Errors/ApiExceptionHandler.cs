@@ -2,6 +2,7 @@ using FluentValidation;
 using EatWell.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EatWell.Api.Errors;
 
@@ -12,12 +13,12 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var (statusCode, title, errors) = exception switch
+        var (statusCode, title, detail) = exception switch
         {
             ValidationException validationException => (
                 StatusCodes.Status400BadRequest,
                 "Validation failed.",
-                validationException.Errors
+                (object?)validationException.Errors
                     .GroupBy(error => error.PropertyName)
                     .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray())),
             KeyNotFoundException => (
@@ -42,12 +43,32 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
             logger.LogError(exception, "Unhandled exception.");
 
         httpContext.Response.StatusCode = statusCode;
-        await httpContext.Response.WriteAsJsonAsync(new
+        httpContext.Response.ContentType = "application/problem+json";
+
+        if (detail is Dictionary<string, string[]> validationErrors)
         {
-            title,
-            status = statusCode,
-            errors
-        }, cancellationToken);
+            var validationProblem = new ValidationProblemDetails(validationErrors)
+            {
+                Type = "about:blank",
+                Title = title,
+                Status = statusCode,
+                Instance = httpContext.Request.Path
+            };
+            validationProblem.Extensions["traceId"] = httpContext.TraceIdentifier;
+            await httpContext.Response.WriteAsJsonAsync(validationProblem, cancellationToken);
+            return true;
+        }
+
+        var problem = new ProblemDetails
+        {
+            Type = "about:blank",
+            Title = title,
+            Status = statusCode,
+            Detail = detail as string,
+            Instance = httpContext.Request.Path
+        };
+        problem.Extensions["traceId"] = httpContext.TraceIdentifier;
+        await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
 
         return true;
     }

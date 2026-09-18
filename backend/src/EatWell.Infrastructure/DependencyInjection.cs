@@ -60,7 +60,7 @@ public static class DependencyInjection
 
         options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
         options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
-        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
         options.CircuitBreaker.MinimumThroughput = 10;
         options.CircuitBreaker.FailureRatio = 0.5;
     }

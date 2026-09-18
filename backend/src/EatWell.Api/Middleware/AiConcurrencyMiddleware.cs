@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EatWell.Api.Middleware;
 
@@ -31,12 +32,17 @@ public sealed class AiConcurrencyMiddleware(RequestDelegate next)
         {
             context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
             context.Response.Headers.Append("Retry-After", "1");
-            await context.Response.WriteAsJsonAsync(new
+            context.Response.ContentType = "application/problem+json";
+            var problem = new ProblemDetails
             {
-                title = "AI request already in progress.",
-                status = StatusCodes.Status429TooManyRequests,
-                detail = "Aynı kullanıcı için başka bir AI işlemi devam ediyor. Lütfen tamamlanmasını bekleyin."
-            });
+                Type = "about:blank",
+                Title = "AI request already in progress.",
+                Status = StatusCodes.Status429TooManyRequests,
+                Detail = "Aynı kullanıcı için başka bir AI işlemi devam ediyor. Lütfen tamamlanmasını bekleyin.",
+                Instance = context.Request.Path
+            };
+            problem.Extensions["traceId"] = context.TraceIdentifier;
+            await context.Response.WriteAsJsonAsync(problem);
             return;
         }
 
