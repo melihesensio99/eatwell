@@ -140,6 +140,7 @@ Günlük ekranı seçilen tarihe göre backend’den özet, öğün, makro ve su
 
 <table><tr>
 <td valign="top"><img src="docs/assets/home.jpg" alt="Ana sayfa" width="230" /></td>
+<td valign="top"><img src="docs/assets/daily-log.jpg" alt="Günlük takip ekranı" width="230" /></td>
 <td valign="top"><img src="docs/assets/analytics.jpg" alt="Analiz ekranı" width="230" /></td>
 </tr></table>
 
