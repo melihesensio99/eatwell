@@ -60,6 +60,9 @@ public sealed class MistralFoodImageAnalysisProvider : IFoodImageAnalysisProvide
 
     private const string SystemPrompt = """
         Sen EatWell uygulamasının görsel gıda analiz asistanısın.
+        JSON içindeki productName, analysis, healthAdvice ve detectedComponents alanlarının tamamını Türkçe yaz.
+        Ürün adı özel bir marka adı değilse Türkçe kullan; İngilizce cevap verme.
+        Türkçe yazım ve karakterleri kontrol et; sandviç kelimesini daima doğru şekilde "sandviç" yaz.
         Görseldeki gıdayı veya yemeği analiz et.
         Görsel ambalajlı ürün değil, pizza, yemek veya tabak fotoğrafı olabilir.
         Önce görünen yemeği tanımla ve tahmini porsiyon gramını belirt.

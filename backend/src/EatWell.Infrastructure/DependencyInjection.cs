@@ -39,18 +39,19 @@ public static class DependencyInjection
         {
             client.BaseAddress = new Uri("https://api.mistral.ai/");
             client.Timeout = TimeSpan.FromSeconds(60);
-        }).AddStandardResilienceHandler(options => ConfigureResilience(options, 1));
+        }).AddStandardResilienceHandler(options => ConfigureResilience(options, 1, TimeSpan.FromSeconds(120)));
         services.AddHttpClient<IRecipeGenerationProvider, MistralRecipeGenerationProvider>(client =>
         {
             client.BaseAddress = new Uri("https://api.mistral.ai/");
             client.Timeout = TimeSpan.FromSeconds(60);
-        }).AddStandardResilienceHandler(options => ConfigureResilience(options, 1));
+        }).AddStandardResilienceHandler(options => ConfigureResilience(options, 1, TimeSpan.FromSeconds(60)));
         return services;
     }
 
     private static void ConfigureResilience(
         HttpStandardResilienceOptions options,
-        int maxRetryAttempts)
+        int maxRetryAttempts,
+        TimeSpan? attemptTimeout = null)
     {
         options.Retry.MaxRetryAttempts = maxRetryAttempts;
         options.Retry.Delay = TimeSpan.FromMilliseconds(300);
@@ -58,9 +59,10 @@ public static class DependencyInjection
         options.Retry.UseJitter = true;
         options.Retry.DisableForUnsafeHttpMethods();
 
-        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
-        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
-        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+        var attempt = attemptTimeout ?? TimeSpan.FromSeconds(30);
+        options.AttemptTimeout.Timeout = attempt;
+        options.TotalRequestTimeout.Timeout = attempt + TimeSpan.FromSeconds(30);
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromTicks(attempt.Ticks * 2);
         options.CircuitBreaker.MinimumThroughput = 10;
         options.CircuitBreaker.FailureRatio = 0.5;
     }

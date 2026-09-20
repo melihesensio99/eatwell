@@ -13,6 +13,9 @@ public sealed class NutritionGoal
     public decimal? ProteinGrams { get; private set; }
     public decimal? CarbohydratesGrams { get; private set; }
     public decimal? FatGrams { get; private set; }
+    public string? ActivityLevel { get; private set; }
+    public string? GoalType { get; private set; }
+    public decimal? TargetWeightKg { get; private set; }
     public NutritionGoalSource Source { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -33,6 +36,9 @@ public sealed class NutritionGoal
         ProteinGrams = proteinGrams;
         CarbohydratesGrams = carbohydratesGrams;
         FatGrams = fatGrams;
+        ActivityLevel = null;
+        GoalType = null;
+        TargetWeightKg = null;
         Source = NutritionGoalSource.Manual;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
@@ -41,12 +47,18 @@ public sealed class NutritionGoal
         decimal dailyCalories,
         decimal proteinGrams,
         decimal carbohydratesGrams,
-        decimal fatGrams)
+        decimal fatGrams,
+        string activityLevel,
+        string goalType,
+        decimal? targetWeightKg)
     {
         DailyCalories = dailyCalories;
         ProteinGrams = proteinGrams;
         CarbohydratesGrams = carbohydratesGrams;
         FatGrams = fatGrams;
+        ActivityLevel = activityLevel;
+        GoalType = goalType;
+        TargetWeightKg = targetWeightKg;
         Source = NutritionGoalSource.Ai;
         UpdatedAt = DateTimeOffset.UtcNow;
     }

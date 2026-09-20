@@ -8,5 +8,8 @@ public sealed record NutritionGoalDto(
     decimal? ProteinGrams,
     decimal? CarbohydratesGrams,
     decimal? FatGrams,
+    string? ActivityLevel,
+    string? GoalType,
+    decimal? TargetWeightKg,
     NutritionGoalSource Source,
     DateTimeOffset UpdatedAt);

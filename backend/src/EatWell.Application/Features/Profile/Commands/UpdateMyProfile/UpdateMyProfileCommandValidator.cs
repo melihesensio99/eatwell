@@ -18,6 +18,14 @@ public sealed class UpdateMyProfileCommandValidator : AbstractValidator<UpdateMy
             .InclusiveBetween(80, 250)
             .When(command => command.HeightCm.HasValue);
 
+        RuleFor(command => command.Age)
+            .InclusiveBetween(13, 120)
+            .When(command => command.Age.HasValue);
+
+        RuleFor(command => command.WaterGoalMilliliters)
+            .InclusiveBetween(500, 10000)
+            .When(command => command.WaterGoalMilliliters.HasValue);
+
         RuleFor(command => command.Gender)
             .Must(gender => gender is null || gender is "male" or "female" or "other")
             .WithMessage("Gender male, female veya other olmalıdır.");

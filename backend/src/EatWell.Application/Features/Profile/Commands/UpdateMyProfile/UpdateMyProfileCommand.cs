@@ -6,14 +6,16 @@ public sealed record UpdateMyProfileCommand(
     string? DisplayName,
     decimal? WeightKg,
     decimal? HeightCm,
-    string? Gender,
-    DateOnly? BirthDate) : IRequest<UpdateMyProfileResponse>;
+    int? Age,
+    int? WaterGoalMilliliters,
+    string? Gender) : IRequest<UpdateMyProfileResponse>;
 
 public sealed record UpdateMyProfileResponse(
     string UserId,
     string? DisplayName,
     decimal? WeightKg,
     decimal? HeightCm,
+    int? Age,
+    int? WaterGoalMilliliters,
     string? Gender,
-    DateOnly? BirthDate,
     DateTimeOffset UpdatedAt);

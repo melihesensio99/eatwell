@@ -9,6 +9,7 @@ public sealed record MyProfileResponse(
     string? DisplayName,
     decimal? WeightKg,
     decimal? HeightCm,
+    int? Age,
+    int? WaterGoalMilliliters,
     string? Gender,
-    DateOnly? BirthDate,
     DateTimeOffset UpdatedAt);

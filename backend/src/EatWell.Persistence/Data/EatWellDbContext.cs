@@ -27,6 +27,8 @@ public sealed class EatWellDbContext : DbContext
             entity.Property(profile => profile.UserId).HasMaxLength(128);
             entity.Property(profile => profile.DisplayName).HasMaxLength(100);
             entity.Property(profile => profile.Gender).HasMaxLength(20);
+            entity.Property(profile => profile.Age);
+            entity.Property(profile => profile.WaterGoalMilliliters);
         });
 
         modelBuilder.Entity<UserAllergen>(entity =>
@@ -88,6 +90,8 @@ public sealed class EatWellDbContext : DbContext
         {
             entity.HasKey(goal => goal.UserId);
             entity.Property(goal => goal.UserId).HasMaxLength(128);
+            entity.Property(goal => goal.ActivityLevel).HasMaxLength(30);
+            entity.Property(goal => goal.GoalType).HasMaxLength(30);
             entity.Property(goal => goal.Source).IsRequired();
             entity.HasOne<UserProfile>()
                 .WithOne()

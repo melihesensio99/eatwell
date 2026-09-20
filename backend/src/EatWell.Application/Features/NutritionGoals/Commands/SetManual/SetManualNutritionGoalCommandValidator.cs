@@ -11,5 +11,6 @@ public sealed class SetManualNutritionGoalCommandValidator
         RuleFor(command => command.ProteinGrams).InclusiveBetween(0, 500);
         RuleFor(command => command.CarbohydratesGrams).InclusiveBetween(0, 1000);
         RuleFor(command => command.FatGrams).InclusiveBetween(0, 300);
+        RuleFor(command => command.WaterGoalMilliliters).InclusiveBetween(500, 10000);
     }
 }

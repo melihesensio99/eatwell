@@ -25,6 +25,9 @@ public sealed class GetMyNutritionGoalQueryHandler(
                 goal.ProteinGrams,
                 goal.CarbohydratesGrams,
                 goal.FatGrams,
+                goal.ActivityLevel,
+                goal.GoalType,
+                goal.TargetWeightKg,
                 goal.Source,
                 goal.UpdatedAt);
     }

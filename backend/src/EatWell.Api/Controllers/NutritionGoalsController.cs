@@ -1,4 +1,5 @@
 using EatWell.Application.Features.NutritionGoals.Commands.CalculateWithAi;
+using EatWell.Application.Features.NutritionGoals.Commands.ConfirmAi;
 using EatWell.Application.Features.NutritionGoals.Commands.SetManual;
 using EatWell.Application.Features.NutritionGoals.Queries.GetMy;
 using MediatR;
@@ -36,5 +37,14 @@ public sealed class NutritionGoalsController(ISender sender) : ControllerBase
         CancellationToken cancellationToken)
     {
         return Ok(await sender.Send(command, cancellationToken));
+    }
+
+    [HttpPut("confirm-ai")]
+    public async Task<IActionResult> ConfirmAi(
+        [FromBody] ConfirmAiNutritionGoalCommand command,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return NoContent();
     }
 }

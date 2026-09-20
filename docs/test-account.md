@@ -2,8 +2,8 @@
 
 Firebase Email/Password ile oluşturulan yerel geliştirme hesabıdır.
 
-- E-posta: `eatwell.demo@localhost.test`
-- Firebase UID: `yvHvfBNRW9Vlcyjao79cBWfWsSw1`
+- E-posta: `test@eatwell.dev`
+- Firebase UID: `Px2teYCKvhgFctCJ17DM6JFfCda2`
 - Kullanım amacı: Mobil giriş, Firebase token ve korumalı backend endpoint testleri
 - Oluşturulma: 2026-09-18
 

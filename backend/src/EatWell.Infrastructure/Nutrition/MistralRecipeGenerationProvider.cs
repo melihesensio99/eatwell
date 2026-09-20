@@ -119,9 +119,13 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
     {
         var normalized = JsonSerializer.Serialize(new
         {
+            promptVersion = "tr-v2",
             ingredients = input.Ingredients.Select(x => x.Trim().ToLowerInvariant()).OrderBy(x => x),
             input.Servings,
-            dietaryPreference = input.DietaryPreference?.Trim().ToLowerInvariant()
+            dietaryPreference = input.DietaryPreference?.Trim().ToLowerInvariant(),
+            imageHash = string.IsNullOrWhiteSpace(input.ImageBase64)
+                ? null
+                : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input.ImageBase64)))
         });
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
         return Convert.ToHexString(hash).ToLowerInvariant();
@@ -163,6 +167,9 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
 
     private const string IngredientsSystemPrompt = """
         Sen EatWell uygulamasının tarif oluşturma asistanısın.
+        JSON içindeki recipeName, description, ingredients.name, ingredients.quantity, steps ve assumptions alanlarının tamamını Türkçe yaz.
+        Kullanıcı başka bir dil istemediği sürece hiçbir açıklama veya malzeme adını İngilizce yazma.
+        Türkçe yazım ve karakterleri kontrol et; özellikle sandviç, yoğurt, soğan, çörek otu ve köfte gibi kelimeleri doğru Türkçe yaz.
         Kullanıcının verdiği malzemeleri temel alarak uygulanabilir bir yemek tarifi oluştur.
         Tarif adı, kısa açıklama, gerekli miktarlarla malzemeler ve sıralı pişirme adımları üret.
         Kullanıcının istemediği veya listede olmayan temel dışı malzemeleri mümkün olduğunca ekleme.
@@ -173,6 +180,9 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
 
     private const string ImageSystemPrompt = """
         Sen EatWell uygulamasının yemek fotoğrafı analiz ve tarif oluşturma asistanısın.
+        JSON içindeki recipeName, description, ingredients.name, ingredients.quantity, steps ve assumptions alanlarının tamamını Türkçe yaz.
+        Görseldeki yabancı ürün veya marka adları dışında hiçbir metni İngilizce yazma.
+        Türkçe yazım ve karakterleri kontrol et; özellikle sandviç, yoğurt, soğan, çörek otu ve köfte gibi kelimeleri doğru Türkçe yaz.
         Fotoğraftaki yemeği tanımla ve mümkün olan en makul tarifini oluştur.
         Görülebilen malzemeleri çıkar ve miktarlarını yaklaşık olarak tahmin et.
         Fotoğraftan kesin bilinemeyen bilgileri assumptions alanında belirt.
@@ -184,6 +194,9 @@ public sealed class MistralRecipeGenerationProvider : IRecipeGenerationProvider
 
     private const string CombinedSystemPrompt = """
         Sen EatWell uygulamasının tarif oluşturma asistanısın.
+        JSON içindeki recipeName, description, ingredients.name, ingredients.quantity, steps ve assumptions alanlarının tamamını Türkçe yaz.
+        Kullanıcı başka bir dil istemediği sürece hiçbir açıklama veya malzeme adını İngilizce yazma.
+        Türkçe yazım ve karakterleri kontrol et; özellikle sandviç, yoğurt, soğan, çörek otu ve köfte gibi kelimeleri doğru Türkçe yaz.
         Fotoğraftaki yemeği analiz et ve kullanıcının ayrıca verdiği malzemeleri de dikkate al.
         Kullanıcının yazdığı malzemeler kesin kabul edilir ve source=user olarak işaretlenir.
         Fotoğraftan tahmin edilen malzemeler source=image ve 0 ile 1 arasında confidence ile döndürülür.

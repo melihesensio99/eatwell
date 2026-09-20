@@ -1,219 +1,336 @@
-# EatWell / FeelWell
+# EatWell 🍽️
 
-<div align="center">
-  <img src="screenshots/screenshot2.png" alt="EatWell home screen" width="920" />
-  <br />
-  <br />
-  <p><strong>Akilli beslenme takibi, barkod tarama, gorsel analiz ve alerjen odakli yonetim tek bir mobil uygulamada.</strong></p>
-  <p>
-    <img src="https://img.shields.io/badge/.NET-9-512BD4?style=for-the-badge&logo=dotnet" alt=".NET 9" />
-    <img src="https://img.shields.io/badge/React_Native-Expo-61DAFB?style=for-the-badge&logo=react" alt="React Native Expo" />
-    <img src="https://img.shields.io/badge/PostgreSQL-Docker-336791?style=for-the-badge&logo=postgresql" alt="PostgreSQL Docker" />
-    <img src="https://img.shields.io/badge/AI-Image_&_Chat-ffb000?style=for-the-badge" alt="AI services" />
-  </p>
-</div>
+EatWell, günlük beslenme takibini sadeleştiren mobil bir beslenme asistanıdır. Kullanıcı; hedeflerini oluşturur, öğünlerini ve suyunu takip eder, barkod veya fotoğrafla besin analizi yapar, alerjenlerini yönetir ve elindeki malzemelerden Türkçe tarifler oluşturur.
 
-EatWell, manuel kalori girisini azaltmak icin tasarlanmis bir mobil beslenme asistanidir. Kullanici barkod tarayabilir, yemegin fotografini yukleyebilir, gunluk ozetini gorebilir, alerjenlerini tanimlayabilir ve AI destekli beslenme tavsiyesi alabilir.
+<p align="center">
+  <img src="docs/assets/home.jpg" alt="EatWell ana sayfa" width="260" />
+  <img src="docs/assets/visual-food-analysis.jpg" alt="Görsel yemek analizi" width="260" />
+  <img src="docs/assets/analytics.jpg" alt="Haftalık analiz" width="260" />
+</p>
 
-## Proje Ozeti
+## ✨ Özellikler
 
-- Barkod tarama ve urun arama
-- Gorsel yemek analizi
-- Alerjen bazli uyarilar
-- Gunluk kalori ve makro takibi
-- AI sohbet asistani
-- Expo tabanli mobil istemci
-- .NET 9 uzerinde katmanli backend
+- 🔐 Firebase Authentication ile kayıt, giriş, çıkış ve kalıcı oturum
+- 🧍 Profil: ad soyad, yaş, kilo, boy ve cinsiyet
+- 🎯 Manuel veya AI destekli kalori, makro ve su hedefi
+- 🥜 Alerjen profili ve ürünlerde alerjen uyarıları
+- 📅 Tarihe bağlı günlük kayıt ve geçmiş günlere erişim
+- 🍽️ Kahvaltı, öğle, akşam ve ara öğün yönetimi
+- 💧 Günlük su takibi
+- 🏷️ Barkod tarama, barkodu elle girme ve Open Food Facts verisi
+- 📷 Kamera veya galeriden görsel yemek analizi
+- 🤖 Mistral ile Türkçe görsel analiz ve tarif üretimi
+- 🥕 Malzemelerle tarif oluşturma veya yemek fotoğrafından tarif bulma
+- 📚 Tarif kaydetme, detayını açma ve silme
+- 📊 Backend’den gelen haftalık kalori/makro analizi
+- 🛡️ Rate limit, timeout, retry ve circuit breaker koruması
 
-## Mimari
+## 🧱 Mimari
 
-Proje temiz bir katman yapisina ayrilmis durumda:
+Proje, sorumlulukları ayrılmış katmanlı bir .NET backend ve Expo/React Native mobil istemciden oluşur.
 
-- **API**: HTTP endpoint'leri, middleware, SignalR hub ve Swagger
-- **Core / Domain**: temel entity'ler ve is kurallari
-- **Core / Application**: service kontratlari, DTO'lar, repository arayuzleri
-- **Infrastructure**: AI servisleri, is servisleri ve dis servis baglantilari
-- **Persistence**: Entity Framework Core, Identity ve veritabani baglantisi
-- **Mobil**: Expo/React Native ekranlari, servisleri ve UI bilesenleri
+```mermaid
+flowchart TB
+    Mobile[Expo React Native Mobil Uygulama]
+    Auth[Firebase Authentication]
+    Api[EatWell.Api\nControllers + Middleware]
+    App[EatWell.Application\nMediatR + Use Cases + DTOs]
+    Domain[EatWell.Domain\nEntities + Business Rules]
+    Infra[EatWell.Infrastructure\nMistral + Open Food Facts + Resilience]
+    Persistence[EatWell.Persistence\nEF Core + PostgreSQL + Redis]
+    Mistral[Mistral AI\nVision + Nutrition + Recipe]
+    OFF[Open Food Facts]
+    DB[(PostgreSQL)]
+    Cache[(Redis Cache)]
+
+    Mobile -->|Bearer Firebase token| Api
+    Mobile --> Auth
+    Api --> App
+    App --> Domain
+    App --> Infra
+    App --> Persistence
+    Infra --> Mistral
+    Infra --> OFF
+    Infra --> Cache
+    Persistence --> DB
+```
+
+### Backend istek akışı
+
+```mermaid
+sequenceDiagram
+    participant U as Kullanıcı
+    participant M as Mobil Uygulama
+    participant F as Firebase
+    participant A as EatWell API
+    participant C as Application
+    participant X as External Provider
+    participant D as PostgreSQL / Redis
+
+    U->>M: Fotoğraf, barkod veya form gönderir
+    M->>F: Oturum tokenı
+    F-->>M: Firebase ID token
+    M->>A: HTTPS + Bearer token
+    A->>A: Authentication, validation, rate limit
+    A->>C: MediatR command/query
+    C->>X: Mistral veya Open Food Facts isteği
+    X-->>C: Yapılandırılmış besin/tarif sonucu
+    C->>D: Kullanıcıya ait kayıtları oku/yaz
+    D-->>C: Güncel veri
+    C-->>A: DTO / ProblemDetails
+    A-->>M: JSON response
+    M-->>U: Güncel ekran
+```
+
+### Katmanlar
+
+| Katman | Sorumluluk |
+|---|---|
+| `EatWell.Api` | Controller’lar, Firebase authentication, CORS, rate limit, Swagger ve hata yönetimi |
+| `EatWell.Application` | Use case’ler, MediatR handler’ları, DTO’lar, validator’lar ve interface’ler |
+| `EatWell.Domain` | Profil, hedef, günlük kayıt ve tarif entity’leri |
+| `EatWell.Infrastructure` | Mistral, Open Food Facts, Redis cache ve dış HTTP çağrıları |
+| `EatWell.Persistence` | EF Core `DbContext`, PostgreSQL repository’leri ve migration’lar |
+| `mobile-app` | Expo/React Native ekranları, API client, navigasyon ve mobil UI |
+
+## 🛠️ Teknolojiler
+
+| Alan | Teknoloji |
+|---|---|
+| Mobil | React Native, Expo SDK 57, TypeScript |
+| Navigasyon | React Navigation Bottom Tabs |
+| Kimlik | Firebase Authentication |
+| Backend | ASP.NET Core / .NET 9 |
+| Mimari | Clean Architecture yaklaşımı, MediatR, CQRS tarzı handler’lar |
+| Veritabanı | PostgreSQL, Entity Framework Core |
+| Cache | Redis |
+| AI | Mistral API; vision, beslenme hedefi ve tarif üretimi |
+| Besin verisi | Open Food Facts |
+| API dokümantasyonu | Swagger / OpenAPI / Swashbuckle |
+| Validasyon | FluentValidation |
+
+## 📱 Mobil kullanıcı akışı
 
 ```mermaid
 flowchart LR
-  A[Mobile App] --> B[API Controllers]
-  B --> C[Application Services]
-  C --> D[Infrastructure Services]
-  D --> E[(PostgreSQL)]
-  D --> F[AI Providers]
-  D --> G[OpenFoodFacts / Product APIs]
-  B --> H[SignalR Chat Hub]
+    Auth[🔐 Giriş / Kayıt] --> Profile[🧍 Profil bilgileri]
+    Profile --> Goal[🎯 Manuel veya AI hedef]
+    Goal --> Allergens[🥜 Alerjen seçimi]
+    Allergens --> Home[🏠 Ana sayfa]
+    Home --> Daily[📅 Günlük]
+    Home --> Scan[🏷️ Barkod / 📷 Görsel analiz]
+    Home --> Recipes[🍳 Tarifler]
+    Home --> Insights[📊 Analiz]
 ```
 
-### Backend Akisi
+### Hedef belirleme
 
-- `FoodAnalysisController` barkod ve gorsel analizini yonetir.
-- `AiChatController` kullanicinin beslenme sorularini cevaplar.
-- `DailyLogController` gunluk tuketim kayitlarini toplar.
-- `CalorieGoalController` kalori hedefini saklar ve getirir.
-- `UserAllergenController` alerjen profilini yonetir.
-- `ProductSearchController` urun aramasi yapar.
+AI hedef akışı aktivite seviyesi ve hedef seçimine göre kalori, protein, karbonhidrat, yağ ve su hedefi önerir. Kullanıcı sonucu onayladığında AI hedefi aktif hedef olur. Daha sonra manuel kayıt yapılırsa manuel hedef AI hedefinin yerine geçer; tekrar AI sonucu onaylanırsa manuel hedefin yerine geçer.
 
-### Veri Modeli
+<p align="center">
+  <img src="docs/assets/onboarding-profile.jpg" alt="Profil onboarding" width="220" />
+  <img src="docs/assets/onboarding-goal.jpg" alt="Hedef onboarding" width="220" />
+  <img src="docs/assets/goal-ai.jpg" alt="AI hedef sonucu" width="220" />
+  <img src="docs/assets/onboarding-allergens.jpg" alt="Alerjen seçimi" width="220" />
+</p>
 
-- `Product`
-- `DailyLog`
-- `CalorieGoal`
-- `UserAllergen`
-- `AppUser` / `AppRole`
+### Günlük takip
 
-### Mobil Akis
+Günlük ekranı seçilen tarihe göre backend’den özet, öğün, makro ve su verilerini çeker. Bir besin eklenince, düzenlenince veya silinince ekran yeniden backend’den yüklenir; grafikler ve toplamlar güncel kalır.
 
-- `HomeScreen` ana giris noktasi ve kisa yollar
-- `BarcodeScannerScreen` barkod okutma ve manuel giris
-- `ImageScannerScreen` gorsel yukleme
-- `AnalysisScreen` urun / yemek sonucu ve AI ozeti
-- `DailySummaryScreen` gunluk ozet
-- `ChatScreen` AI beslenme danismanligi
-- `AllergenSettingsScreen` kisitlari tanimlama
+<p align="center">
+  <img src="docs/assets/home.jpg" alt="Ana sayfa" width="230" />
+  <img src="docs/assets/analytics.jpg" alt="Analiz ekranı" width="230" />
+  <img src="docs/assets/barcode-result.jpg" alt="Barkod sonucu" width="230" />
+</p>
 
-## Gorsel Tur
+### AI görsel analiz
 
-<div align="center">
-  <table>
-    <tr>
-      <td><img src="screenshots/screenshot2.png" alt="Home screen" width="100%" /></td>
-      <td><img src="screenshots/screenshot10.png" alt="Barcode scanner" width="100%" /></td>
-    </tr>
-    <tr>
-      <td><img src="screenshots/screenshot3.png" alt="Analysis details" width="100%" /></td>
-      <td><img src="screenshots/screenshot11.png" alt="Allergen warning and score" width="100%" /></td>
-    </tr>
-  </table>
-</div>
+Kamera veya galeri görseli mobilde sıkıştırılır, API’ye base64 olarak gönderilir. Backend görseli Mistral Vision provider’ına iletir ve yapılandırılmış JSON sonucu döndürür:
 
-<div align="center">
-  <table>
-    <tr>
-      <td><img src="screenshots/screenshot9.png" alt="AI image scan in progress" width="100%" /></td>
-      <td><img src="screenshots/screenshot1.png" alt="Allergen settings" width="100%" /></td>
-    </tr>
-  </table>
-</div>
+- ürün/yemek adı
+- Türkçe açıklama ve tavsiyeler
+- kalori ve makrolar
+- tahmini porsiyon
+- tespit edilen içerikler
+- alerjenler
 
-## Teknoloji Stacki
+<p align="center">
+  <img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz sonucu" width="250" />
+  <img src="docs/assets/barcode-result.jpg" alt="Barkod besin sonucu" width="250" />
+</p>
 
-### Backend
+### Tarifler
 
-- `.NET 9`
-- `ASP.NET Core Web API`
-- `Entity Framework Core`
-- `ASP.NET Identity`
-- `SignalR`
-- `Swagger / OpenAPI`
-- `Docker` ve `docker-compose`
+Tarifler sekmesinde iki backend akışı bulunur:
 
-### Mobil
+1. **Tarif Bul:** Kamera veya galeriden yemek fotoğrafı gönderilir.
+2. **Tarif Oluştur:** Kullanıcı malzemeleri girer ve AI Türkçe tarif üretir.
 
-- `React Native`
-- `Expo`
-- `TypeScript`
-- `Axios`
-- `@react-navigation`
-- `expo-camera`
-- `expo-image-picker`
-- `AsyncStorage`
+Tarif sonucu kaydedilmezse sekmeden çıkarken temizlenir. Kaydedilen tarifler backend’de tutulur; tekrar açılabilir ve silinebilir.
 
-### Dis Servis Mantigi
+<p align="center">
+  <img src="docs/assets/recipes.jpg" alt="Tarifler ekranı" width="240" />
+  <img src="docs/assets/recipe-find.jpg" alt="Fotoğraftan tarif bul" width="240" />
+  <img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="240" />
+  <img src="docs/assets/saved-recipes.jpg" alt="Kayıtlı tarifler" width="240" />
+</p>
 
-- AI analiz ve sohbet icin servis katmani
-- Urun verisi ve barkod bilgisi icin dis veri kaynaklari
-- Kullanici bazli alerjen ve gunluk log context'i
+## 🔌 API ve Swagger
 
-## Nasil Calisir?
-
-1. Kullanici uygulamayi acar ve ana ekrandan bir islem secer.
-2. Barkod tarama veya gorsel analiz ekranina yonlendirilir.
-3. Istek API tarafinda ilgili controller'a gider.
-4. Application katmani service kontratini cagirir.
-5. Infrastructure katmani AI, urun verisi veya veritabani ile konusur.
-6. Sonuc mobil ekranda anlasilir bir kart duzeniyle gosterilir.
-
-## Kurulum
-
-### Backend
-
-1. `eatwellfeelwell` klasorunu ac.
-2. `API/appsettings.json` icindeki gerekli baglanti ve AI ayarlarini gir.
-3. Backend'i Docker Compose ile veya yerel .NET komutlariyla calistir.
-
-```bash
-docker-compose up -d --build
-
-# veya
-dotnet run
-```
-
-### Mobil
-
-1. `EatWellMobile` klasorune gir.
-2. Bagimliliklari yukle.
-
-```bash
-npm install
-```
-
-3. Expo uygulamasini baslat.
-
-```bash
-npx expo start
-```
-
-4. Telefonunda **Expo Go** ile QR kodu tara.
-
-## Proje Yapisi
+Backend çalışırken Swagger UI:
 
 ```text
-EatWell/
-|-- eatwellfeelwell/
-|   |-- API/
-|   |-- Core/
-|   |-- Infrastructure/
-|   `-- Persistence/
-|-- EatWellMobile/
-|   |-- src/
-|   |-- assets/
-|   `-- app.json
-|-- screenshots/
-`-- docker-compose.yml
+http://localhost:5248/swagger
 ```
 
-## Neden Bu Yapi?
+OpenAPI JSON:
 
-- Uygulama mantigi UI'dan ayriliyor.
-- AI ve veritabani degisiklikleri mobil tarafa dokunmadan gelistirilebiliyor.
-- Yeni analiz turleri, yeni provider'lar veya yeni ekranlar kolayca eklenebiliyor.
-- Alerjen ve gunluk log gibi kisisel veriler device context ile birlikte islenebiliyor.
-
-## Ekranlar Arasindaki Iliski
-
-```mermaid
-flowchart TD
-  H[HomeScreen] --> B[BarcodeScannerScreen]
-  H --> I[ImageScannerScreen]
-  H --> D[DailySummaryScreen]
-  H --> C[ChatScreen]
-  H --> A[AllergenSettingsScreen]
-  B --> R[AnalysisScreen]
-  I --> R
-  R --> L[CalorieScreen]
+```text
+http://localhost:5248/swagger/v1/swagger.json
 ```
 
-## Notlar
+Korumalı endpoint’lerde Firebase Bearer token gerekir.
 
-- Gorseller `screenshots/` klasorunden referans veriliyor.
-- README, GitHub uzerinde ekran goruntulerini dogrudan gosterecek sekilde hazirlandi.
-- Yerel gelistirme icin API adresi mobil tarafta config dosyasi uzerinden yonetiliyor.
+### Sağlık
 
-## Gelistiriciler
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/api/health` | API sağlık kontrolü |
 
-Bu proje, **Tekirdag Namik Kemal Universitesi Bilgisayar Muhendisligi** bitirme projesi olarak **Melih Esen** ve **Tarik Gezici** tarafindan, **Dr. Ahmet Saygili** danismanliginda gelistirildi.
+### Profil ve alerjenler
 
-*Hedefimiz, beslenme takibini daha akilli, hizli ve kullanisli hale getirmek.*
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/api/profile` | Kullanıcı profilini getirir |
+| `PUT` | `/api/profile` | Profil bilgilerini günceller |
+| `GET` | `/api/profile/allergens` | Alerjenleri getirir |
+| `PUT` | `/api/profile/allergens` | Alerjen listesini değiştirir |
+
+### Beslenme hedefleri
+
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/api/nutrition-goals` | Aktif hedefi getirir |
+| `PUT` | `/api/nutrition-goals/manual` | Manuel hedefi kaydeder |
+| `POST` | `/api/nutrition-goals/calculate-with-ai` | AI hedef önerisi üretir |
+| `PUT` | `/api/nutrition-goals/confirm-ai` | AI önerisini aktif hedef yapar |
+
+### Günlük kayıtlar
+
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/api/daily-logs?date=YYYY-MM-DD` | Günün öğünlerini getirir |
+| `GET` | `/api/daily-logs/summary?date=YYYY-MM-DD` | Kalori/makro/su özetini getirir |
+| `GET` | `/api/daily-logs/history?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD` | Tarih aralığı geçmişi |
+| `POST` | `/api/daily-logs/items` | Öğün besini ekler |
+| `PUT` | `/api/daily-logs/items/{itemId}` | Besin gramını günceller |
+| `DELETE` | `/api/daily-logs/items/{itemId}` | Öğün besinini siler |
+| `POST` | `/api/daily-logs/water` | Su tüketimi ekler |
+| `DELETE` | `/api/daily-logs/water` | Su tüketimini azaltır |
+
+### Besin, barkod ve AI
+
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/api/foods/search?query=...` | Open Food Facts araması |
+| `GET` | `/api/foods/barcode/{barcode}` | Barkoddan ürün getirir |
+| `POST` | `/api/foods/analyze-image` | Görsel gıda analizi yapar |
+| `GET` | `/api/foods/recent` | Son kullanılan besinler |
+| `GET` | `/api/foods/favorites` | Favori besinler |
+| `POST` | `/api/foods/favorites` | Favori ekler |
+| `DELETE` | `/api/foods/favorites/{externalId}` | Favori siler |
+
+### Tarifler ve haftalık analiz
+
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| `POST` | `/api/recipes/generate` | Görsel veya malzemelerle tarif üretir |
+| `GET` | `/api/recipes/saved` | Kayıtlı tarifleri getirir |
+| `POST` | `/api/recipes/saved` | Tarif kaydeder |
+| `DELETE` | `/api/recipes/saved/{id}` | Tarif siler |
+| `GET` | `/api/analytics/weekly-summary?weekStart=YYYY-MM-DD` | Haftalık gerçek kayıt analizi |
+
+## 🚀 Çalıştırma
+
+### Gereksinimler
+
+- .NET SDK 9+
+- Node.js 20+
+- PostgreSQL ve Redis
+- Firebase projesi
+- Mistral API anahtarı
+
+### Backend
+
+Gizli anahtarları repoya koymadan environment variable veya User Secrets kullan:
+
+```powershell
+dotnet user-secrets --project backend/src/EatWell.Api set "Mistral:ApiKey" "YOUR_MISTRAL_API_KEY"
+dotnet run --project backend/src/EatWell.Api --urls http://0.0.0.0:5248
+```
+
+Kontrol:
+
+```text
+http://localhost:5248/api/health
+http://localhost:5248/swagger
+```
+
+### Mobil
+
+`mobile-app/.env`:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://YOUR_LOCAL_IP:5248
+```
+
+Fiziksel telefonda `localhost` yerine bilgisayarının aynı Wi-Fi üzerindeki yerel IP adresini kullan:
+
+```powershell
+cd mobile-app
+npm install
+npx expo start -c
+```
+
+## 🔒 Güvenlik
+
+- Mistral anahtarı yalnızca backend’de tutulmalıdır.
+- Firebase ID token backend tarafından doğrulanır.
+- AI ve dış servis endpointleri rate limit ile korunur.
+- Dış isteklerde retry, timeout ve circuit breaker politikaları vardır.
+- Kullanıcı verileri `UserId` üzerinden ayrıştırılır.
+- Swagger production ortamında erişim politikasıyla sınırlandırılmalıdır.
+
+## 🧪 Doğrulama
+
+```powershell
+cd mobile-app
+npx tsc --noEmit
+
+dotnet build backend/src/EatWell.Api/EatWell.Api.csproj
+```
+
+## 📸 Ekranlar
+
+### Kimlik ve onboarding
+
+<p align="center">
+  <img src="docs/assets/auth.jpg" alt="Giriş ekranı" width="220" />
+  <img src="docs/assets/onboarding-profile.jpg" alt="Profil bilgileri" width="220" />
+  <img src="docs/assets/onboarding-goal.jpg" alt="Hedef seçimi" width="220" />
+  <img src="docs/assets/onboarding-allergens.jpg" alt="Alerjen seçimi" width="220" />
+</p>
+
+### Ürün analizi ve tarifler
+
+<p align="center">
+  <img src="docs/assets/barcode-result.jpg" alt="Barkod analizi" width="220" />
+  <img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz" width="220" />
+  <img src="docs/assets/recipe-find.jpg" alt="Tarif bul" width="220" />
+  <img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="220" />
+</p>
+
+## 📄 Lisans
+
+Bu depo geliştirme ve eğitim amaçlı EatWell projesini içerir.

@@ -7,4 +7,5 @@ public sealed record SetManualNutritionGoalCommand(
     decimal DailyCalories,
     decimal? ProteinGrams,
     decimal? CarbohydratesGrams,
-    decimal? FatGrams) : IRequest;
+    decimal? FatGrams,
+    int WaterGoalMilliliters) : IRequest;

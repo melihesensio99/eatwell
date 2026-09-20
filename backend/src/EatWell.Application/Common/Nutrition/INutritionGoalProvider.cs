@@ -25,4 +25,5 @@ public sealed record NutritionGoalCalculationDto(
     decimal Tdee,
     decimal GoalAdjustmentPercentage,
     IReadOnlyList<string> Assumptions,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    decimal WaterGoalMilliliters = 0);

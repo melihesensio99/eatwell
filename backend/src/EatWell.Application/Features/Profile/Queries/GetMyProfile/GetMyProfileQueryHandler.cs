@@ -28,8 +28,9 @@ public sealed class GetMyProfileQueryHandler
                 profile.DisplayName,
                 profile.WeightKg,
                 profile.HeightCm,
+                profile.Age,
+                profile.WaterGoalMilliliters,
                 profile.Gender,
-                profile.BirthDate,
                 profile.UpdatedAt);
     }
 }

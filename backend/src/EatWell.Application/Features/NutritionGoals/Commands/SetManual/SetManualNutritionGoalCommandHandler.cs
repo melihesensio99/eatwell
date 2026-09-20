@@ -30,6 +30,7 @@ public sealed class SetManualNutritionGoalCommandHandler(
             command.ProteinGrams,
             command.CarbohydratesGrams,
             command.FatGrams);
+        profile.SetWaterGoal(command.WaterGoalMilliliters);
         await nutritionGoalRepository.SaveChangesAsync(cancellationToken);
     }
 }

@@ -25,7 +25,6 @@ namespace EatWell.Persistence.Migrations
             modelBuilder.Entity("EatWell.Domain.DailyLogs.DailyLog", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -54,7 +53,6 @@ namespace EatWell.Persistence.Migrations
             modelBuilder.Entity("EatWell.Domain.DailyLogs.DailyLogItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Barcode")
@@ -114,6 +112,10 @@ namespace EatWell.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("ActivityLevel")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<decimal?>("CarbohydratesGrams")
                         .HasColumnType("numeric");
 
@@ -123,11 +125,18 @@ namespace EatWell.Persistence.Migrations
                     b.Property<decimal?>("FatGrams")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("GoalType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<decimal?>("ProteinGrams")
                         .HasColumnType("numeric");
 
                     b.Property<int>("Source")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("TargetWeightKg")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -269,8 +278,8 @@ namespace EatWell.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.Property<DateOnly?>("BirthDate")
-                        .HasColumnType("date");
+                    b.Property<int?>("Age")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -288,6 +297,9 @@ namespace EatWell.Persistence.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("WaterGoalMilliliters")
+                        .HasColumnType("integer");
 
                     b.Property<decimal?>("WeightKg")
                         .HasColumnType("numeric");

@@ -30,9 +30,12 @@ public static class ExternalHttpClient
 
             var statusCode = (int)response.StatusCode;
             response.Dispose();
+            var reason = statusCode is 401 or 403
+                ? "Mistral API anahtarı geçersiz, süresi dolmuş veya bu modele erişim yetkisi yok."
+                : $"External service returned HTTP {statusCode}.";
             throw new ExternalServiceException(
                 provider,
-                new HttpRequestException($"External service returned HTTP {statusCode}."));
+                new HttpRequestException(reason));
         }
         catch (ExternalServiceException)
         {

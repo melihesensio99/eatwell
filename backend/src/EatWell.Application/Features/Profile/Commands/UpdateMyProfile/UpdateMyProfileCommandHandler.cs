@@ -33,8 +33,9 @@ public sealed class UpdateMyProfileCommandHandler
             request.DisplayName,
             request.WeightKg,
             request.HeightCm,
-            request.Gender,
-            request.BirthDate);
+            request.Age,
+            request.WaterGoalMilliliters,
+            request.Gender);
 
         await _profiles.SaveChangesAsync(cancellationToken);
 
@@ -43,8 +44,9 @@ public sealed class UpdateMyProfileCommandHandler
             profile.DisplayName,
             profile.WeightKg,
             profile.HeightCm,
+            profile.Age,
+            profile.WaterGoalMilliliters,
             profile.Gender,
-            profile.BirthDate,
             profile.UpdatedAt);
     }
 }

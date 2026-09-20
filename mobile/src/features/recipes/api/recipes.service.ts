@@ -1,8 +1,0 @@
-import { apiClient } from '../../../api/client';
-
-export interface GenerateRecipeRequest { readonly ingredients: string[]; readonly servings: number; readonly dietaryPreference?: string; readonly imageBase64?: string; readonly mimeType?: string; }
-export interface GeneratedRecipeIngredientDto { readonly name: string; readonly quantity: string; readonly source: string; readonly confidence: number; }
-export interface GeneratedRecipeDto { readonly recipeName: string; readonly description: string; readonly ingredients: readonly GeneratedRecipeIngredientDto[]; readonly steps: readonly string[]; readonly preparationMinutes: number; readonly cookingMinutes: number; readonly servings: number; readonly caloriesPerServing?: number; readonly proteinGramsPerServing?: number; readonly carbohydratesGramsPerServing?: number; readonly fatGramsPerServing?: number; readonly youtubeSearchUrl?: string; readonly youtubeUrl?: string; }
-export const recipesService = { generate: async (request: GenerateRecipeRequest) => (await apiClient.post<GeneratedRecipeDto>('/api/recipes/generate', request)).data };
-export interface SavedRecipeDto extends GeneratedRecipeDto { readonly id: string; readonly createdAt: string; }
-export const savedRecipesService = { getAll: async () => (await apiClient.get<SavedRecipeDto[]>('/api/recipes/saved')).data, save: async (recipe: GeneratedRecipeDto) => (await apiClient.post<SavedRecipeDto>('/api/recipes/saved', { ...recipe, youtubeSearchUrl: recipe.youtubeSearchUrl ?? recipe.youtubeUrl ?? '' })).data, remove: async (id: string) => apiClient.delete(`/api/recipes/saved/${id}`) };
