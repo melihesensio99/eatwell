@@ -2,11 +2,11 @@
 
 EatWell, günlük beslenme takibini sadeleştiren mobil bir beslenme asistanıdır. Kullanıcı; hedeflerini oluşturur, öğünlerini ve suyunu takip eder, barkod veya fotoğrafla besin analizi yapar, alerjenlerini yönetir ve elindeki malzemelerden Türkçe tarifler oluşturur.
 
-<p align="center">
-  <img src="docs/assets/home.jpg" alt="EatWell ana sayfa" width="260" />
-  <img src="docs/assets/visual-food-analysis.jpg" alt="Görsel yemek analizi" width="260" />
-  <img src="docs/assets/analytics.jpg" alt="Haftalık analiz" width="260" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/home.jpg" alt="EatWell ana sayfa" width="260" /></td>
+<td valign="top"><img src="docs/assets/visual-food-analysis.jpg" alt="Görsel yemek analizi" width="260" /></td>
+<td valign="top"><img src="docs/assets/analytics.jpg" alt="Haftalık analiz" width="260" /></td>
+</tr></table>
 
 ## ✨ Özellikler
 
@@ -127,22 +127,22 @@ flowchart LR
 
 AI hedef akışı aktivite seviyesi ve hedef seçimine göre kalori, protein, karbonhidrat, yağ ve su hedefi önerir. Kullanıcı sonucu onayladığında AI hedefi aktif hedef olur. Daha sonra manuel kayıt yapılırsa manuel hedef AI hedefinin yerine geçer; tekrar AI sonucu onaylanırsa manuel hedefin yerine geçer.
 
-<p align="center">
-  <img src="docs/assets/onboarding-profile.jpg" alt="Profil onboarding" width="220" />
-  <img src="docs/assets/onboarding-goal.jpg" alt="Hedef onboarding" width="220" />
-  <img src="docs/assets/goal-ai.jpg" alt="AI hedef sonucu" width="220" />
-  <img src="docs/assets/onboarding-allergens.jpg" alt="Alerjen seçimi" width="220" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/onboarding-profile.jpg" alt="Profil onboarding" width="220" /></td>
+<td valign="top"><img src="docs/assets/onboarding-goal.jpg" alt="Hedef onboarding" width="220" /></td>
+<td valign="top"><img src="docs/assets/goal-ai.jpg" alt="AI hedef sonucu" width="220" /></td>
+<td valign="top"><img src="docs/assets/onboarding-allergens.jpg" alt="Alerjen seçimi" width="220" /></td>
+</tr></table>
 
 ### Günlük takip
 
 Günlük ekranı seçilen tarihe göre backend’den özet, öğün, makro ve su verilerini çeker. Bir besin eklenince, düzenlenince veya silinince ekran yeniden backend’den yüklenir; grafikler ve toplamlar güncel kalır.
 
-<p align="center">
-  <img src="docs/assets/home.jpg" alt="Ana sayfa" width="230" />
-  <img src="docs/assets/analytics.jpg" alt="Analiz ekranı" width="230" />
-  <img src="docs/assets/barcode-result.jpg" alt="Barkod sonucu" width="230" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/home.jpg" alt="Ana sayfa" width="230" /></td>
+<td valign="top"><img src="docs/assets/analytics.jpg" alt="Analiz ekranı" width="230" /></td>
+<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod sonucu" width="230" /></td>
+</tr></table>
 
 ### AI görsel analiz
 
@@ -155,10 +155,10 @@ Kamera veya galeri görseli mobilde sıkıştırılır, API’ye base64 olarak g
 - tespit edilen içerikler
 - alerjenler
 
-<p align="center">
-  <img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz sonucu" width="250" />
-  <img src="docs/assets/barcode-result.jpg" alt="Barkod besin sonucu" width="250" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz sonucu" width="250" /></td>
+<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod besin sonucu" width="250" /></td>
+</tr></table>
 
 ### Tarifler
 
@@ -169,12 +169,12 @@ Tarifler sekmesinde iki backend akışı bulunur:
 
 Tarif sonucu kaydedilmezse sekmeden çıkarken temizlenir. Kaydedilen tarifler backend’de tutulur; tekrar açılabilir ve silinebilir.
 
-<p align="center">
-  <img src="docs/assets/recipes.jpg" alt="Tarifler ekranı" width="240" />
-  <img src="docs/assets/recipe-find.jpg" alt="Fotoğraftan tarif bul" width="240" />
-  <img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="240" />
-  <img src="docs/assets/saved-recipes.jpg" alt="Kayıtlı tarifler" width="240" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/recipes.jpg" alt="Tarifler ekranı" width="240" /></td>
+<td valign="top"><img src="docs/assets/recipe-find.jpg" alt="Fotoğraftan tarif bul" width="240" /></td>
+<td valign="top"><img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="240" /></td>
+<td valign="top"><img src="docs/assets/saved-recipes.jpg" alt="Kayıtlı tarifler" width="240" /></td>
+</tr></table>
 
 ## 🔌 API ve Swagger
 
@@ -315,21 +315,21 @@ dotnet build backend/src/EatWell.Api/EatWell.Api.csproj
 
 ### Kimlik ve onboarding
 
-<p align="center">
-  <img src="docs/assets/auth.jpg" alt="Giriş ekranı" width="220" />
-  <img src="docs/assets/onboarding-profile.jpg" alt="Profil bilgileri" width="220" />
-  <img src="docs/assets/onboarding-goal.jpg" alt="Hedef seçimi" width="220" />
-  <img src="docs/assets/onboarding-allergens.jpg" alt="Alerjen seçimi" width="220" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/auth.jpg" alt="Giriş ekranı" width="220" /></td>
+<td valign="top"><img src="docs/assets/onboarding-profile.jpg" alt="Profil bilgileri" width="220" /></td>
+<td valign="top"><img src="docs/assets/onboarding-goal.jpg" alt="Hedef seçimi" width="220" /></td>
+<td valign="top"><img src="docs/assets/onboarding-allergens.jpg" alt="Alerjen seçimi" width="220" /></td>
+</tr></table>
 
 ### Ürün analizi ve tarifler
 
-<p align="center">
-  <img src="docs/assets/barcode-result.jpg" alt="Barkod analizi" width="220" />
-  <img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz" width="220" />
-  <img src="docs/assets/recipe-find.jpg" alt="Tarif bul" width="220" />
-  <img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="220" />
-</p>
+<table><tr>
+<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod analizi" width="220" /></td>
+<td valign="top"><img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz" width="220" /></td>
+<td valign="top"><img src="docs/assets/recipe-find.jpg" alt="Tarif bul" width="220" /></td>
+<td valign="top"><img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="220" /></td>
+</tr></table>
 
 ## 📄 Lisans
 
