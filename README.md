@@ -160,6 +160,42 @@ Kamera veya galeri görseli mobilde sıkıştırılır, API’ye base64 olarak g
 <td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod besin sonucu" width="250" /></td>
 </tr></table>
 
+### Barkod tarama sonucu
+
+Barkod tarama akışı Open Food Facts verisini kullanır. Örneğin Nutella barkodu okutulduğunda backend’den dönen ürün bilgileri sonuç ekranında tek tek kullanılır:
+
+- 🏷️ Marka ve ürün adı: **Nutella, Ferrero / Nutella**
+- 🔢 Okutulan barkod numarası
+- 🖼️ Ürün görseli
+- 🟢 **Nutri-Score** seviyesi
+- 🧪 **NOVA** işlenmişlik grubu
+- ⚠️ Kullanıcının profilindeki alerjenlerle eşleşen alerjen uyarısı
+- 🔥 100 gram başına enerji değeri
+- 💪 Protein, karbonhidrat ve yağ değerleri
+- 🍬 Şeker, doymuş yağ ve tuz değerleri
+- ⚖️ Elle girilebilen porsiyon miktarı
+- 🍽️ Kahvaltı, öğle, akşam veya ara öğün seçimi
+- ➕ Porsiyonun seçilen öğüne gerçek kalori ve makro değerleriyle eklenmesi
+
+Bu sayede barkod sonucu yalnızca ürün adını göstermiyor; Open Food Facts’ten gelen besin, kalite, işlenmişlik ve alerjen verilerini günlük kayda aktarılabilir bir forma dönüştürüyor.
+
+<table><tr>
+<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Nutella barkod sonucu ve Nutri-Score" width="300" /></td>
+<td valign="top">
+
+```text
+Barkod → Open Food Facts
+       → Ürün + marka + görsel
+       → Nutri-Score + NOVA
+       → Alerjen karşılaştırması
+       → Besin değerleri
+       → Porsiyon ve öğün seçimi
+       → Günlük kayda ekleme
+```
+
+</td>
+</tr></table>
+
 ### Tarifler
 
 Tarifler sekmesinde iki backend akışı bulunur:
