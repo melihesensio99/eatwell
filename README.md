@@ -141,7 +141,6 @@ Günlük ekranı seçilen tarihe göre backend’den özet, öğün, makro ve su
 <table><tr>
 <td valign="top"><img src="docs/assets/home.jpg" alt="Ana sayfa" width="230" /></td>
 <td valign="top"><img src="docs/assets/analytics.jpg" alt="Analiz ekranı" width="230" /></td>
-<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod sonucu" width="230" /></td>
 </tr></table>
 
 ### AI görsel analiz
@@ -157,7 +156,6 @@ Kamera veya galeri görseli mobilde sıkıştırılır, API’ye base64 olarak g
 
 <table><tr>
 <td valign="top"><img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz sonucu" width="250" /></td>
-<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod besin sonucu" width="250" /></td>
 </tr></table>
 
 ### Barkod tarama sonucu
@@ -361,7 +359,6 @@ dotnet build backend/src/EatWell.Api/EatWell.Api.csproj
 ### Ürün analizi ve tarifler
 
 <table><tr>
-<td valign="top"><img src="docs/assets/barcode-result.jpg" alt="Barkod analizi" width="220" /></td>
 <td valign="top"><img src="docs/assets/visual-food-analysis.jpg" alt="Görsel analiz" width="220" /></td>
 <td valign="top"><img src="docs/assets/recipe-find.jpg" alt="Tarif bul" width="220" /></td>
 <td valign="top"><img src="docs/assets/recipe-detail.jpg" alt="Tarif detayı" width="220" /></td>
